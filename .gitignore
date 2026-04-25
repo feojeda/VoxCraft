@@ -26,6 +26,10 @@ audio_output/
 .vscode/
 .idea/
 
+# Dev scripts runtime
+.dev-pids/
+.dev-logs/
+
 # OS
 .DS_Store
 Thumbs.db
