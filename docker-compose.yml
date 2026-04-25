@@ -1,0 +1,73 @@
+# ttsQwen Docker Compose — local development environment
+#
+# Services:
+#   api:      FastAPI application (hot-reload enabled)
+#   worker:   Celery worker for TTS generation
+#   redis:    Message broker and result backend
+#
+# Usage:
+#   docker compose up redis api        # Start API + Redis
+#   docker compose up                  # Start all services
+#   docker compose logs -f worker      # Follow worker logs
+
+services:
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    depends_on:
+      - redis
+    volumes:
+      - ./backend:/app
+      - audio_output:/app/audio_output
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    depends_on:
+      - redis
+    volumes:
+      - audio_output:/app/audio_output
+    # GPU access via NVIDIA Container Toolkit needed for production
+    # For local dev without GPU, the worker runs on CPU (slow but functional)
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+    command: celery -A workers.celery_app worker --loglevel=info --queues=tts
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+
+  # Frontend service placeholder — will be enabled in Plan 02
+  # frontend:
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "3000:3000"
+  #   depends_on:
+  #     - api
+  #   volumes:
+  #     - ./frontend:/app
+  #   command: npm run dev
+
+volumes:
+  redis_data:
+  audio_output:
