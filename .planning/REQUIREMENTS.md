@@ -84,13 +84,37 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| (Populated during roadmap creation) | | |
+| TTS-01 | Phase 1 | Pending |
+| TTS-02 | Phase 1 | Pending |
+| TTS-03 | Phase 1 | Pending |
+| TTS-04 | Phase 1 | Pending |
+| OUT-01 | Phase 1 | Pending |
+| OUT-02 | Phase 1 | Pending |
+| OUT-03 | Phase 1 | Pending |
+| CLON-01 | Phase 2 | Pending |
+| CLON-02 | Phase 2 | Pending |
+| CLON-03 | Phase 2 | Pending |
+| CLON-04 | Phase 2 | Pending |
+| CLON-05 | Phase 2 | Pending |
+| PROS-01 | Phase 2 | Pending |
+| PROS-02 | Phase 2 | Pending |
+| PROS-03 | Phase 2 | Pending |
+| USER-01 | Phase 3 | Pending |
+| USER-02 | Phase 3 | Pending |
+| USER-03 | Phase 3 | Pending |
+| USER-04 | Phase 3 | Pending |
+| OUT-04 | Phase 3 | Pending |
+| OUT-08 | Phase 3 | Pending |
+| OUT-05 | Phase 4 | Pending |
+| OUT-06 | Phase 4 | Pending |
+| OUT-07 | Phase 4 | Pending |
 
 **Coverage:**
-- v1 requirements: 22 total
-- Mapped to phases: 0
-- Unmapped: 22 ⚠️
+- v1 requirements: 24 total
+- Mapped to phases: 24
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2025-04-25*
-*Last updated: 2025-04-25 after initial definition*
+*Requirements defined: 2025-04-25*
+*Last updated: 2026-04-25 after roadmap creation — traceability populated, count corrected to 24*
