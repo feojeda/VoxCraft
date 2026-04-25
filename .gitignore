@@ -35,4 +35,5 @@ audio_output/
 Thumbs.db
 
 # Opencode tooling
-.opencode/
+.opencode/*
+!.opencode/commands/
