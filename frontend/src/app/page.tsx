@@ -8,6 +8,9 @@ import { SpeedSlider } from "@/components/speed-slider";
 import { GenerateButton } from "@/components/generate-button";
 import { ProgressBar } from "@/components/progress-bar";
 import { ErrorMessage } from "@/components/error-message";
+import { AudioPlayer } from "@/components/audio-player";
+import { DownloadButtons } from "@/components/download-buttons";
+import { EmptyState } from "@/components/empty-state";
 import { useTTSGeneration } from "@/hooks/use-tts-generation";
 
 export default function Home() {
@@ -125,15 +128,25 @@ export default function Home() {
             <h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-[var(--text-secondary)]">
               Audio Output
             </h2>
-            <div className="min-h-[100px] rounded-lg border border-dashed border-[var(--border)] bg-[var(--background)] p-4 text-center text-[var(--text-secondary)]">
-              {generationStatus === "completed" && audioUrls ? (
-                <span className="text-[var(--success)]">
-                  Audio ready! Player will be added in the next plan.
-                </span>
-              ) : (
-                "Your audio will appear here"
-              )}
-            </div>
+
+            {/* Empty state — shown before first generation */}
+            {!audioUrls && !isGenerating && <EmptyState />}
+
+            {/* Audio player — shown during generation or when audio is ready */}
+            {(audioUrls !== null || isGenerating) && (
+              <AudioPlayer
+                audioUrl={audioUrls?.wav ?? null}
+                isGenerating={isGenerating}
+              />
+            )}
+
+            {/* Download buttons — shown when audio is ready */}
+            {audioUrls && (
+              <DownloadButtons
+                wavUrl={audioUrls.wav}
+                mp3Url={audioUrls.mp3}
+              />
+            )}
           </section>
         </div>
       </div>
