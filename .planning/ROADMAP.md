@@ -29,7 +29,13 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. User can adjust speech speed from 0.5x to 2.0x and hear the difference in generated audio
   4. User can input 5000+ words of text and receive a single coherent audio file
   5. User can preview audio in-browser, download as MP3, and download as WAV
-**Plans**: TBD
+**Plans**: 5 plans
+Plans:
+- [ ] 01-01-PLAN.md — Backend foundation (FastAPI + SQLAlchemy + Celery + Docker)
+- [ ] 01-02-PLAN.md — Frontend foundation (Next.js + Tailwind dark theme + API client)
+- [ ] 01-03-PLAN.md — TTS engine + async job pipeline (QwenTTSEngine + Celery tasks + audio serving)
+- [ ] 01-04-PLAN.md — Frontend TTS UI (voice picker + text input + speed slider + generation flow)
+- [ ] 01-05-PLAN.md — Audio player + downloads + Docker integration + end-to-end verification
 **UI hint**: yes
 
 ### Phase 2: Voice Cloning & Expressive Control
@@ -75,7 +81,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Core TTS Pipeline | 0/? | Not started | - |
+| 1. Core TTS Pipeline | 0/5 | Planning complete | - |
 | 2. Voice Cloning & Expressive Control | 0/? | Not started | - |
 | 3. User Accounts & Complete Frontend | 0/? | Not started | - |
 | 4. Batch Processing & Sharing | 0/? | Not started | - |
