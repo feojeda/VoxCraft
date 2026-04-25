@@ -1,14 +1,26 @@
-# ttsQwen Docker Compose — local development environment
+# ttsQwen Docker Compose — full stack local development
 #
 # Services:
 #   api:      FastAPI application (hot-reload enabled)
 #   worker:   Celery worker for TTS generation
 #   redis:    Message broker and result backend
+#   frontend: Next.js frontend
 #
 # Usage:
-#   docker compose up redis api        # Start API + Redis
-#   docker compose up                  # Start all services
-#   docker compose logs -f worker      # Follow worker logs
+#   docker compose up                    # Start all services
+#   docker compose up redis api          # Start API + Redis only
+#   docker compose logs -f worker        # Follow worker logs
+#
+# GPU inference:
+#   For GPU inference, add to worker service:
+#   deploy:
+#     resources:
+#       reservations:
+#         devices:
+#           - driver: nvidia
+#             count: 1
+#             capabilities: [gpu]
+#   Requires NVIDIA Container Toolkit installed on host.
 
 services:
   api:
@@ -22,9 +34,12 @@ services:
     depends_on:
       - redis
     volumes:
-      - ./backend:/app
       - audio_output:/app/audio_output
+    networks:
+      - ttsqwen
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    # Memory limit to prevent resource exhaustion (T-05-02)
+    mem_limit: 512m
 
   worker:
     build:
@@ -36,6 +51,8 @@ services:
       - redis
     volumes:
       - audio_output:/app/audio_output
+    networks:
+      - ttsqwen
     # GPU access via NVIDIA Container Toolkit needed for production
     # For local dev without GPU, the worker runs on CPU (slow but functional)
     # deploy:
@@ -46,6 +63,8 @@ services:
     #           count: 1
     #           capabilities: [gpu]
     command: celery -A workers.celery_app worker --loglevel=info --queues=tts
+    # Worker concurrency=1 to limit GPU load (T-05-02)
+    mem_limit: 4g
 
   redis:
     image: redis:7-alpine
@@ -53,20 +72,28 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
+    networks:
+      - ttsqwen
     command: redis-server --appendonly yes
 
-  # Frontend service placeholder — will be enabled in Plan 02
-  # frontend:
-  #   build:
-  #     context: ./frontend
-  #     dockerfile: Dockerfile
-  #   ports:
-  #     - "3000:3000"
-  #   depends_on:
-  #     - api
-  #   volumes:
-  #     - ./frontend:/app
-  #   command: npm run dev
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ""
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+    networks:
+      - ttsqwen
+    environment:
+      - NEXT_PUBLIC_API_URL=/api
+
+networks:
+  ttsqwen:
+    driver: bridge
 
 volumes:
   redis_data:
