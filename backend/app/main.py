@@ -11,7 +11,10 @@ from collections.abc import AsyncGenerator
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.routes.audio import router as audio_router
 from app.api.routes.health import router as health_router
+from app.api.routes.tts import router as tts_router
+from app.api.routes.voices import router as voices_router
 from app.config import settings
 
 logger = logging.getLogger(__name__)
@@ -43,3 +46,6 @@ app.add_middleware(
 
 # Mount health routes under /api prefix
 app.include_router(health_router, prefix="/api")
+app.include_router(tts_router, prefix="/api")
+app.include_router(voices_router, prefix="/api")
+app.include_router(audio_router, prefix="/api")
