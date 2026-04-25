@@ -1,0 +1,29 @@
+# Web framework
+fastapi[standard]>=0.136
+uvicorn[standard]>=0.34
+
+# Task queue
+celery[redis]>=5.6
+redis>=5.0
+
+# Database
+sqlalchemy[asyncio]>=2.0
+aiosqlite>=0.20
+alembic>=1.13
+
+# Validation & settings
+pydantic>=2.0
+pydantic-settings>=2.0
+
+# TTS engine
+qwen-tts>=0.1.1
+soundfile>=0.12
+
+# Flash attention (requires CUDA + --no-build-isolation)
+# flash-attn
+
+# Dev dependencies
+pytest
+pytest-asyncio
+httpx
+ruff
