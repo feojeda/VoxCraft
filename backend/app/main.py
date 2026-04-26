@@ -12,6 +12,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes.audio import router as audio_router
+from app.api.routes.auth import router as auth_router
 from app.api.routes.health import router as health_router
 from app.api.routes.pronunciation import router as pronunciation_router
 from app.api.routes.tts import router as tts_router
@@ -47,6 +48,7 @@ app.add_middleware(
 
 # Mount health routes under /api prefix
 app.include_router(health_router, prefix="/api")
+app.include_router(auth_router, prefix="/api")
 app.include_router(tts_router, prefix="/api")
 app.include_router(voices_router, prefix="/api")
 app.include_router(pronunciation_router, prefix="/api")

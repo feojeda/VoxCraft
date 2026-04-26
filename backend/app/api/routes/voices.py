@@ -119,7 +119,7 @@ async def create_voice(
 
 
 @router.get("/voices", response_model=VoiceListResponse)
-async def list_voices(db: AsyncSession = get_db()) -> VoiceListResponse:
+async def list_voices(db: AsyncSession = Depends(get_db)) -> VoiceListResponse:
     """List all cloned voices.
 
     Returns a paginated list of user-uploaded voice cloning samples.
@@ -133,7 +133,7 @@ async def list_voices(db: AsyncSession = get_db()) -> VoiceListResponse:
 
 
 @router.get("/voices/{voice_id}", response_model=VoiceResponse)
-async def get_voice(voice_id: str, db: AsyncSession = get_db()) -> VoiceResponse:
+async def get_voice(voice_id: str, db: AsyncSession = Depends(get_db)) -> VoiceResponse:
     """Get details for a single cloned voice."""
     voice = await db.get(ClonedVoice, voice_id)
     if voice is None:
@@ -161,7 +161,7 @@ async def update_voice(
 
 
 @router.delete("/voices/{voice_id}", status_code=204)
-async def delete_voice(voice_id: str, db: AsyncSession = get_db()) -> None:
+async def delete_voice(voice_id: str, db: AsyncSession = Depends(get_db)) -> None:
     """Delete a cloned voice and its associated audio file."""
     voice = await db.get(ClonedVoice, voice_id)
     if voice is None:

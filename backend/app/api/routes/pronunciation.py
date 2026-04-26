@@ -22,7 +22,7 @@ from app.schemas.pronunciation import (
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/pronunciation", tags=["pronunciation"])
+router = APIRouter(prefix="/pronunciation", tags=["pronunciation"])
 
 
 @router.post("", status_code=201, response_model=PronunciationEntryResponse)
