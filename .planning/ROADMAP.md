@@ -14,7 +14,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Core TTS Pipeline** - Infrastructure, Qwen3-TTS engine integration, async job system, predefined voices, and audio output
 - [x] **Phase 2: Voice Cloning & Expressive Control** - Voice cloning from uploads/recordings, voice management, emotion presets, natural language prosody, pronunciation dictionary
-- [ ] **Phase 3: User Accounts & Complete Frontend** - User auth, generation history, voice presets, full web UI with waveform playback
+- [x] **Phase 3: User Accounts & Complete Frontend** - User auth, generation history, voice presets, full web UI with waveform playback
 - [ ] **Phase 4: Batch Processing & Sharing** - CSV batch upload, ZIP download, public share links
 
 ## Phase Details
@@ -68,10 +68,10 @@ Plans:
   4. User can save and load voice setting presets (speed + emotion combos) for reuse
 **Plans**: 4 plans
 Plans:
-- [ ] 03-01-PLAN.md — Backend authentication foundation (User model, JWT auth, route protection, job ownership)
-- [ ] 03-02-PLAN.md — Frontend auth system & navigation (auth context, login/register pages, top nav, route protection middleware)
-- [ ] 03-03-PLAN.md — Generation history backend & frontend (history API, audio ownership, /history page with replay/download/delete)
-- [ ] 03-04-PLAN.md — Voice presets & account page (preset CRUD, preset controls on generation page, /account page)
+- [x] 03-01-PLAN.md — Backend authentication foundation (User model, JWT auth, route protection, job ownership)
+- [x] 03-02-PLAN.md — Frontend auth system & navigation (auth context, login/register pages, top nav, route protection middleware)
+- [x] 03-03-PLAN.md — Generation history backend & frontend (history API, audio ownership, /history page with replay/download/delete)
+- [x] 03-04-PLAN.md — Voice presets & account page (preset CRUD, preset controls on generation page, /account page)
 **UI hint**: yes
 
 ### Phase 4: Batch Processing & Sharing
@@ -94,5 +94,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 |-------|----------------|--------|-----------|
 | 1. Core TTS Pipeline | 5/5 | Complete | 2026-04-25 |
 | 2. Voice Cloning & Expressive Control | 5/5 | Complete | 2026-04-25 |
-| 3. User Accounts & Complete Frontend | 0/? | Not started | - |
+| 3. User Accounts & Complete Frontend | 4/4 | Complete | 2026-04-26 |
 | 4. Batch Processing & Sharing | 0/? | Not started | - |
