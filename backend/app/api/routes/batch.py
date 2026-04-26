@@ -40,8 +40,8 @@ async def create_batch(
 
     try:
         rows = batch_service.parse_csv_rows(content)
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc))
+    except (ValueError, UnicodeDecodeError) as exc:
+        raise HTTPException(status_code=400, detail=f"Invalid file: {exc}")
 
     batch = await batch_service.create_batch(
         user_id=current_user.id,
