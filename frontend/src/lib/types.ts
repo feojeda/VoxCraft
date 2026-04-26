@@ -120,6 +120,61 @@ export interface VoicePreset {
   created_at: string;
 }
 
+// Batch types
+export interface BatchItem {
+  job_id: string;
+  text: string;
+  voice_name: string | null;
+  status: JobStatus;
+  error_message: string | null;
+  audio_wav_url: string | null;
+  audio_mp3_url: string | null;
+  created_at: string;
+  completed_at: string | null;
+}
+
+export interface BatchJob {
+  id: string;
+  status: JobStatus;
+  total_items: number;
+  completed_count: number;
+  failed_count: number;
+  created_at: string;
+  completed_at: string | null;
+  items: BatchItem[];
+}
+
+export interface BatchListResponse {
+  items: Omit<BatchJob, "items">[];
+  total: number;
+}
+
+// Share types
+export interface ShareLink {
+  id: string;
+  token: string;
+  job_id: string;
+  created_at: string;
+  expires_at: string | null;
+  revoked_at: string | null;
+  is_active: boolean;
+  share_url: string;
+}
+
+export interface ShareListResponse {
+  items: ShareLink[];
+  total: number;
+}
+
+export interface SharePublicData {
+  token: string;
+  text: string;
+  voice_name: string | null;
+  audio_wav_url: string | null;
+  audio_mp3_url: string | null;
+  created_at: string;
+}
+
 // Predefined Qwen3-TTS CustomVoice speakers (from research F-01)
 export const PREDEFINED_SPEAKERS: Speaker[] = [
   {

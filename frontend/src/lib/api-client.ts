@@ -10,6 +10,11 @@ import type {
   RegisterRequest,
   HistoryListResponse,
   VoicePreset,
+  BatchJob,
+  BatchListResponse,
+  ShareLink,
+  ShareListResponse,
+  SharePublicData,
 } from "./types";
 
 const API_BASE_URL =
@@ -55,6 +60,12 @@ async function request<T>(
     }
 
     throw new ApiClientError({ detail, status_code: statusCode });
+  }
+
+  // For binary responses (ZIP downloads), return blob instead of JSON
+  const contentType = response.headers.get("content-type");
+  if (contentType?.includes("application/zip")) {
+    return response.blob() as Promise<T>;
   }
 
   return response.json() as Promise<T>;
@@ -197,6 +208,64 @@ export const apiClient = {
     return request<void>(`/presets/${presetId}`, {
       method: "DELETE",
     });
+  },
+
+  /** GET /api/batches — List user's batches */
+  getBatches(skip?: number, limit?: number): Promise<BatchListResponse> {
+    const params = new URLSearchParams();
+    if (skip !== undefined) params.set("skip", String(skip));
+    if (limit !== undefined) params.set("limit", String(limit));
+    const query = params.toString();
+    return request<BatchListResponse>(`/batches${query ? `?${query}` : ""}`);
+  },
+
+  /** POST /api/batches — Upload CSV for batch processing */
+  uploadBatch(file: File, speed?: number, instruct?: string | null, emotionPreset?: string | null): Promise<BatchJob> {
+    const formData = new FormData();
+    formData.append("file", file);
+    if (speed !== undefined) formData.append("speed", String(speed));
+    if (instruct) formData.append("instruct", instruct);
+    if (emotionPreset) formData.append("emotion_preset", emotionPreset);
+    return request<BatchJob>("/batches", {
+      method: "POST",
+      body: formData,
+      headers: {}, // Let browser set Content-Type with boundary
+    });
+  },
+
+  /** GET /api/batches/{batchId} — Get batch status and items */
+  getBatch(batchId: string): Promise<BatchJob> {
+    return request<BatchJob>(`/batches/${batchId}`);
+  },
+
+  /** GET /api/batches/{batchId}/download — Download ZIP */
+  downloadBatchZip(batchId: string, format: "mp3" | "both" = "mp3"): Promise<Blob> {
+    return request<Blob>(`/batches/${batchId}/download?format=${format}`, {
+      headers: { Accept: "application/zip" },
+    });
+  },
+
+  /** POST /api/shares — Create a share link */
+  createShare(jobId: string, expiresAt?: string | null): Promise<ShareLink> {
+    return request<ShareLink>("/shares", {
+      method: "POST",
+      body: JSON.stringify({ job_id: jobId, expires_at: expiresAt }),
+    });
+  },
+
+  /** GET /api/shares — List user's share links */
+  getShares(): Promise<ShareListResponse> {
+    return request<ShareListResponse>("/shares");
+  },
+
+  /** DELETE /api/shares/{shareId} — Revoke a share link */
+  revokeShare(shareId: string): Promise<void> {
+    return request<void>(`/shares/${shareId}`, { method: "DELETE" });
+  },
+
+  /** GET /api/shares/public/{token} — Get public share data */
+  getPublicShare(token: string): Promise<SharePublicData> {
+    return request<SharePublicData>(`/shares/public/${token}`);
   },
 };
 
