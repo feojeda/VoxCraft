@@ -5,6 +5,9 @@ import type {
   Speaker,
   VoiceResponse,
   ApiError,
+  User,
+  LoginRequest,
+  RegisterRequest,
 } from "./types";
 
 const API_BASE_URL =
@@ -29,6 +32,7 @@ async function request<T>(
   const url = `${API_BASE_URL}${endpoint}`;
 
   const response = await fetch(url, {
+    credentials: "include",
     headers: {
       "Content-Type": "application/json",
       ...options?.headers,
@@ -55,6 +59,32 @@ async function request<T>(
 }
 
 export const apiClient = {
+  /** POST /api/auth/register — Create a new user account */
+  register(credentials: RegisterRequest): Promise<User> {
+    return request<User>("/auth/register", {
+      method: "POST",
+      body: JSON.stringify(credentials),
+    });
+  },
+
+  /** POST /api/auth/login — Authenticate and set JWT cookie */
+  login(credentials: LoginRequest): Promise<User> {
+    return request<User>("/auth/login", {
+      method: "POST",
+      body: JSON.stringify(credentials),
+    });
+  },
+
+  /** POST /api/auth/logout — Clear JWT cookie */
+  logout(): Promise<void> {
+    return request<void>("/auth/logout", { method: "POST" });
+  },
+
+  /** GET /api/auth/me — Get current user profile */
+  me(): Promise<User> {
+    return request<User>("/auth/me");
+  },
+
   /** POST /api/generate — Create a TTS job */
   createTTSJob(ttsRequest: TTSRequest): Promise<TTSJobResponse> {
     return request<TTSJobResponse>("/generate", {

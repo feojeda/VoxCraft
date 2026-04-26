@@ -73,6 +73,23 @@ export interface ApiError {
   status_code: number;
 }
 
+// Auth types
+export interface User {
+  id: string;
+  email: string;
+  created_at: string;
+}
+
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface RegisterRequest {
+  email: string;
+  password: string;
+}
+
 // Predefined Qwen3-TTS CustomVoice speakers (from research F-01)
 export const PREDEFINED_SPEAKERS: Speaker[] = [
   {
