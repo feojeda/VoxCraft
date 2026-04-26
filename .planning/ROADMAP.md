@@ -15,7 +15,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: Core TTS Pipeline** - Infrastructure, Qwen3-TTS engine integration, async job system, predefined voices, and audio output
 - [x] **Phase 2: Voice Cloning & Expressive Control** - Voice cloning from uploads/recordings, voice management, emotion presets, natural language prosody, pronunciation dictionary
 - [x] **Phase 3: User Accounts & Complete Frontend** - User auth, generation history, voice presets, full web UI with waveform playback
-- [ ] **Phase 4: Batch Processing & Sharing** - CSV batch upload, ZIP download, public share links
+- [x] **Phase 4: Batch Processing & Sharing** - CSV batch upload, ZIP download, public share links (completed 2026-04-26)
 
 ## Phase Details
 
@@ -88,7 +88,7 @@ Plans:
 - [x] 04-02-PLAN.md — Backend batch service and API (CSV parsing, job creation, ZIP generation, batch routes)
 - [x] 04-03-PLAN.md — Backend share service and API (token generation, public audio, share routes)
 - [x] 04-04-PLAN.md — Frontend batch UI (types, API client, upload component, batch list/detail pages)
-- [ ] 04-05-PLAN.md — Frontend sharing and integration (share button, public page, account nav history updates)
+- [x] 04-05-PLAN.md — Frontend sharing and integration (share button, public page, account nav history updates)
 **UI hint**: yes
 
 ## Progress
@@ -101,4 +101,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | 1. Core TTS Pipeline | 5/5 | Complete | 2026-04-25 |
 | 2. Voice Cloning & Expressive Control | 5/5 | Complete | 2026-04-25 |
 | 3. User Accounts & Complete Frontend | 4/4 | Complete | 2026-04-26 |
-| 4. Batch Processing & Sharing | 0/5 | Planned | - |
+| 4. Batch Processing & Sharing | 5/5 | Complete   | 2026-04-26 |
