@@ -8,6 +8,7 @@ import type {
   User,
   LoginRequest,
   RegisterRequest,
+  HistoryListResponse,
 } from "./types";
 
 const API_BASE_URL =
@@ -152,6 +153,22 @@ export const apiClient = {
   /** DELETE /api/pronunciation/{id} — Delete pronunciation entry */
   deletePronunciationEntry(entryId: string): Promise<void> {
     return request<void>(`/pronunciation/${entryId}`, {
+      method: "DELETE",
+    });
+  },
+
+  /** GET /api/history — List generation history */
+  getHistory(skip?: number, limit?: number): Promise<HistoryListResponse> {
+    const params = new URLSearchParams();
+    if (skip !== undefined) params.set("skip", String(skip));
+    if (limit !== undefined) params.set("limit", String(limit));
+    const query = params.toString();
+    return request<HistoryListResponse>(`/history${query ? `?${query}` : ""}`);
+  },
+
+  /** DELETE /api/history/{jobId} — Delete a history item */
+  deleteHistoryItem(jobId: string): Promise<void> {
+    return request<void>(`/history/${jobId}`, {
       method: "DELETE",
     });
   },

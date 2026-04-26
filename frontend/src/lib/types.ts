@@ -90,6 +90,26 @@ export interface RegisterRequest {
   password: string;
 }
 
+// History types
+export interface HistoryItem {
+  id: string;
+  text: string;
+  voice_name: string | null;
+  status: JobStatus;
+  mode: TTSMode;
+  speed: number;
+  created_at: string;
+  completed_at: string | null;
+  audio_wav_url: string | null;
+  audio_mp3_url: string | null;
+  error_message: string | null;
+}
+
+export interface HistoryListResponse {
+  items: HistoryItem[];
+  total: number;
+}
+
 // Predefined Qwen3-TTS CustomVoice speakers (from research F-01)
 export const PREDEFINED_SPEAKERS: Speaker[] = [
   {
