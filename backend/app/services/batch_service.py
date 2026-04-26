@@ -319,7 +319,7 @@ class BatchService:
                     batch_db.completed_count = completed_count
                     batch_db.failed_count = failed_count
                     if completed_count + failed_count == batch_db.total_items:
-                        batch_db.status = "completed" if failed_count == 0 else "completed"
+                        batch_db.status = "completed" if failed_count == 0 else "failed"
                         if batch_db.completed_at is None:
                             batch_db.completed_at = datetime.utcnow()
                     await session.commit()
