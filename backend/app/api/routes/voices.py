@@ -21,8 +21,9 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_db
+from app.api.deps import get_current_user, get_db
 from app.config import settings
+from app.models.user import User
 from app.models.voice import ClonedVoice
 from app.schemas.voice import (
     VoiceCreateRequest,
@@ -54,6 +55,7 @@ async def create_voice(
     ref_text: str = Form(...),
     name: str = Form(...),
     db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ) -> VoiceResponse:
     """Upload an audio file for voice cloning.
 
@@ -109,6 +111,7 @@ async def create_voice(
         ref_text=ref_text,
         duration_seconds=validation["duration"],
         sample_rate=validation["sample_rate"],
+        user_id=current_user.id,
     )
     db.add(voice)
     await db.commit()
@@ -119,12 +122,19 @@ async def create_voice(
 
 
 @router.get("/voices", response_model=VoiceListResponse)
-async def list_voices(db: AsyncSession = Depends(get_db)) -> VoiceListResponse:
-    """List all cloned voices.
+async def list_voices(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> VoiceListResponse:
+    """List cloned voices for the authenticated user.
 
     Returns a paginated list of user-uploaded voice cloning samples.
     """
-    result = await db.execute(select(ClonedVoice).order_by(ClonedVoice.created_at.desc()))
+    result = await db.execute(
+        select(ClonedVoice)
+        .where(ClonedVoice.user_id == current_user.id)
+        .order_by(ClonedVoice.created_at.desc())
+    )
     voices = result.scalars().all()
     return VoiceListResponse(
         voices=[VoiceResponse.model_validate(v) for v in voices],
@@ -133,10 +143,14 @@ async def list_voices(db: AsyncSession = Depends(get_db)) -> VoiceListResponse:
 
 
 @router.get("/voices/{voice_id}", response_model=VoiceResponse)
-async def get_voice(voice_id: str, db: AsyncSession = Depends(get_db)) -> VoiceResponse:
+async def get_voice(
+    voice_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> VoiceResponse:
     """Get details for a single cloned voice."""
     voice = await db.get(ClonedVoice, voice_id)
-    if voice is None:
+    if voice is None or voice.user_id != current_user.id:
         raise HTTPException(status_code=404, detail=f"Voice '{voice_id}' not found")
     return VoiceResponse.model_validate(voice)
 
@@ -146,10 +160,11 @@ async def update_voice(
     voice_id: str,
     request: VoiceUpdateRequest,
     db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ) -> VoiceResponse:
     """Rename a cloned voice."""
     voice = await db.get(ClonedVoice, voice_id)
-    if voice is None:
+    if voice is None or voice.user_id != current_user.id:
         raise HTTPException(status_code=404, detail=f"Voice '{voice_id}' not found")
 
     voice.name = request.name
@@ -161,10 +176,14 @@ async def update_voice(
 
 
 @router.delete("/voices/{voice_id}", status_code=204)
-async def delete_voice(voice_id: str, db: AsyncSession = Depends(get_db)) -> None:
+async def delete_voice(
+    voice_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> None:
     """Delete a cloned voice and its associated audio file."""
     voice = await db.get(ClonedVoice, voice_id)
-    if voice is None:
+    if voice is None or voice.user_id != current_user.id:
         raise HTTPException(status_code=404, detail=f"Voice '{voice_id}' not found")
 
     # Remove audio file and parent directory

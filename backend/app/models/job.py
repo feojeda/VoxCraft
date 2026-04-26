@@ -36,6 +36,10 @@ class Job(Base):
     ref_audio: Mapped[str | None] = mapped_column(Text, nullable=True)
     ref_text: Mapped[str | None] = mapped_column(Text, nullable=True)
 
+    # Ownership and display
+    user_id: Mapped[str | None] = mapped_column(String, nullable=True)
+    voice_name: Mapped[str | None] = mapped_column(String, nullable=True)
+
     # Output
     audio_wav_path: Mapped[str | None] = mapped_column(String, nullable=True)
     audio_mp3_path: Mapped[str | None] = mapped_column(String, nullable=True)

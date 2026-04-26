@@ -9,12 +9,13 @@ import logging
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_db
+from app.api.deps import get_current_user, get_db
 from app.models.job import Job
+from app.models.user import User
 from app.models.voice import ClonedVoice
 from app.schemas.tts import TTSJobResponse, TTSRequest, JobStatusResponse
 from app.services.job_manager import job_manager
-from workers.engine.model_manager import VALID_SPEAKER_IDS
+from workers.engine.model_manager import SPEAKERS, VALID_SPEAKER_IDS
 from workers.tasks.tts_generate import generate_speech
 from workers.tasks.voice_clone import generate_voice_clone
 
@@ -23,10 +24,28 @@ logger = logging.getLogger(__name__)
 router = APIRouter(tags=["tts"])
 
 
+def _resolve_voice_name(request: TTSRequest, cloned_voice: ClonedVoice | None) -> str:
+    """Compute a human-readable voice label for history display."""
+    if request.cloned_voice_id and cloned_voice:
+        return cloned_voice.name
+    if request.speaker:
+        # Look up friendly name from SPEAKERS catalog
+        for s in SPEAKERS:
+            if s["id"] == request.speaker.lower().strip():
+                return s["name"]
+        return request.speaker
+    if request.mode == "voice-design":
+        return "Custom Voice"
+    if request.mode == "voice-clone":
+        return "Cloned Voice"
+    return "Unknown"
+
+
 @router.post("/generate", status_code=202, response_model=TTSJobResponse)
 async def create_tts_job(
     request: TTSRequest,
     db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ) -> TTSJobResponse:
     """Create a new TTS generation job.
 
@@ -39,15 +58,19 @@ async def create_tts_job(
     - voice-design: Create a voice from text description
     - voice-clone: Clone from reference audio (legacy) or persisted cloned voice
     """
+    cloned_voice = None
+
     # Validate voice source
     if request.cloned_voice_id:
-        # Verify cloned voice exists
-        voice = await db.get(ClonedVoice, request.cloned_voice_id)
-        if voice is None:
+        # Verify cloned voice exists and is owned by user
+        cloned_voice = await db.get(ClonedVoice, request.cloned_voice_id)
+        if cloned_voice is None:
             raise HTTPException(
                 status_code=404,
                 detail=f"Cloned voice '{request.cloned_voice_id}' not found",
             )
+        if cloned_voice.user_id and cloned_voice.user_id != current_user.id:
+            raise HTTPException(status_code=404, detail="Cloned voice not found")
     elif request.mode == "speech":
         if not request.speaker:
             raise HTTPException(status_code=400, detail="speaker is required for speech mode")
@@ -72,6 +95,8 @@ async def create_tts_job(
                 detail="ref_audio is required for voice-clone mode",
             )
 
+    voice_name = _resolve_voice_name(request, cloned_voice)
+
     # Create job record
     job = await job_manager.create_job(
         text=request.text,
@@ -83,6 +108,8 @@ async def create_tts_job(
         instructions=request.instructions,
         ref_audio=request.ref_audio,
         ref_text=request.ref_text,
+        user_id=current_user.id,
+        voice_name=voice_name,
     )
 
     # Dispatch appropriate Celery task
@@ -125,13 +152,16 @@ async def create_tts_job(
 
 
 @router.get("/jobs/{job_id}", response_model=JobStatusResponse)
-async def get_job_status(job_id: str) -> JobStatusResponse:
+async def get_job_status(
+    job_id: str,
+    current_user: User = Depends(get_current_user),
+) -> JobStatusResponse:
     """Get the current status of a TTS generation job.
 
     Returns status, progress percentage, and audio URLs when complete.
     """
     job = await job_manager.get_job(job_id)
-    if job is None:
+    if job is None or job.user_id != current_user.id:
         raise HTTPException(status_code=404, detail=f"Job '{job_id}' not found")
 
     # Build audio URLs from paths when job is completed

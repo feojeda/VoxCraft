@@ -26,7 +26,7 @@ class PronunciationDict(Base):
         primary_key=True,
         default=lambda: str(uuid4()),
     )
-    word: Mapped[str] = mapped_column(String, nullable=False, unique=True)
+    word: Mapped[str] = mapped_column(String, nullable=False)
     replacement: Mapped[str] = mapped_column(String, nullable=False)
     user_id: Mapped[str | None] = mapped_column(String, nullable=True)
 

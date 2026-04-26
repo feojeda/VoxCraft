@@ -35,6 +35,8 @@ class JobManager:
         instructions: str | None = None,
         ref_audio: str | None = None,
         ref_text: str | None = None,
+        user_id: str | None = None,
+        voice_name: str | None = None,
     ) -> Job:
         """Create a new TTS generation job in queued status.
 
@@ -62,6 +64,8 @@ class JobManager:
             instructions=instructions,
             ref_audio=ref_audio,
             ref_text=ref_text,
+            user_id=user_id,
+            voice_name=voice_name,
             status="queued",
             progress=0,
         )

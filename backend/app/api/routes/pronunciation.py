@@ -12,8 +12,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_db
+from app.api.deps import get_current_user, get_db
 from app.models.pronunciation import PronunciationDict
+from app.models.user import User
 from app.schemas.pronunciation import (
     PronunciationEntryRequest,
     PronunciationEntryResponse,
@@ -29,6 +30,7 @@ router = APIRouter(prefix="/pronunciation", tags=["pronunciation"])
 async def create_entry(
     request: PronunciationEntryRequest,
     db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ) -> PronunciationEntryResponse:
     """Create a new pronunciation dictionary entry.
 
@@ -37,7 +39,8 @@ async def create_entry(
     # Check for existing word (case-insensitive)
     result = await db.execute(
         select(PronunciationDict).where(
-            PronunciationDict.word.ilike(request.word)
+            PronunciationDict.word.ilike(request.word),
+            PronunciationDict.user_id == current_user.id,
         )
     )
     existing = result.scalar_one_or_none()
@@ -50,6 +53,7 @@ async def create_entry(
     entry = PronunciationDict(
         word=request.word,
         replacement=request.replacement,
+        user_id=current_user.id,
     )
     db.add(entry)
     await db.commit()
@@ -62,10 +66,13 @@ async def create_entry(
 @router.get("", response_model=PronunciationListResponse)
 async def list_entries(
     db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ) -> PronunciationListResponse:
-    """List all pronunciation dictionary entries ordered alphabetically."""
+    """List all pronunciation dictionary entries for the authenticated user."""
     result = await db.execute(
-        select(PronunciationDict).order_by(PronunciationDict.word)
+        select(PronunciationDict)
+        .where(PronunciationDict.user_id == current_user.id)
+        .order_by(PronunciationDict.word)
     )
     entries = result.scalars().all()
     return PronunciationListResponse(
@@ -78,10 +85,11 @@ async def list_entries(
 async def delete_entry(
     entry_id: str,
     db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ) -> None:
     """Delete a pronunciation dictionary entry."""
     entry = await db.get(PronunciationDict, entry_id)
-    if entry is None:
+    if entry is None or entry.user_id != current_user.id:
         raise HTTPException(
             status_code=404,
             detail=f"Pronunciation entry '{entry_id}' not found",
