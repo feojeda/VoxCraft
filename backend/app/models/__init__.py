@@ -6,7 +6,8 @@ before Alembic or init_db() runs.
 
 from app.models.job import Job
 from app.models.pronunciation import PronunciationDict
+from app.models.preset import VoicePreset
 from app.models.user import User
 from app.models.voice import ClonedVoice
 
-__all__ = ["ClonedVoice", "Job", "PronunciationDict", "User"]
+__all__ = ["ClonedVoice", "Job", "PronunciationDict", "User", "VoicePreset"]
