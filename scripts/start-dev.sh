@@ -3,9 +3,12 @@
 #
 # Starts all services for local development:
 #   1. Redis (via Docker, if not already running)
-#   2. Backend FastAPI server (uvicorn, port 8000)
-#   3. Celery worker (TTS generation)
+#   2. Backend FastAPI server (uvicorn, port 8000) — proxies TTS to external server
+#   3. Celery worker (queues TTS jobs, calls external OpenAI-compatible server)
 #   4. Frontend Next.js dev server (port 3000)
+#
+# The backend no longer loads ML models locally. TTS inference runs on
+# a separate OpenAI-compatible server (see TTS_SERVER_URL in .env).
 #
 # Usage:
 #   ./scripts/start-dev.sh          # Start all services
@@ -37,10 +40,23 @@ TARGET="${1:-all}"
 
 # ─── .env check ───────────────────────────────────────────────────────────────
 if [ ! -f "${ROOT_DIR}/.env" ]; then
-    info "Creating .env from .env.example (CPU mode for local dev)..."
+    info "Creating .env from .env.example..."
     cp "${ROOT_DIR}/.env.example" "${ROOT_DIR}/.env"
-    sed -i '' 's/GPU_DEVICE=cuda:0/GPU_DEVICE=cpu/' "${ROOT_DIR}/.env"
-    ok ".env created with GPU_DEVICE=cpu"
+    ok ".env created"
+fi
+
+# ─── TTS Server check ─────────────────────────────────────────────────────────
+TTS_URL=$(grep "^TTS_SERVER_URL=" "${ROOT_DIR}/.env" 2>/dev/null | cut -d= -f2 || echo "")
+if [ -n "$TTS_URL" ]; then
+    TTS_HOST=$(echo "$TTS_URL" | sed -E 's|https?://||' | cut -d: -f1)
+    TTS_PORT=$(echo "$TTS_URL" | sed -E 's|https?://||' | cut -d: -f2)
+    TTS_PORT="${TTS_PORT:-80}"
+    if ! nc -z "$TTS_HOST" "$TTS_PORT" 2>/dev/null; then
+        warn "TTS server not reachable at ${TTS_URL}"
+        warn "Make sure the external TTS server is running before generating audio"
+    else
+        ok "TTS server reachable at ${TTS_URL}"
+    fi
 fi
 
 # ─── Redis ────────────────────────────────────────────────────────────────────
@@ -170,10 +186,17 @@ if [ -f "${PID_DIR}/api.pid" ]; then
     echo "    API Docs:      http://localhost:8000/docs"
 fi
 if [ -f "${PID_DIR}/worker.pid" ]; then
-    echo "    Celery Worker: running"
+    echo "    Celery Worker: running (proxies TTS to external server)"
 fi
 if [ -f "${PID_DIR}/frontend.pid" ]; then
     echo "    Frontend:      http://localhost:3000"
+fi
+echo ""
+echo "  TTS Server:"
+if [ -n "${TTS_URL:-}" ]; then
+    echo "    ${TTS_URL}"
+else
+    echo "    (check TTS_SERVER_URL in .env)"
 fi
 echo ""
 echo "  Logs:"

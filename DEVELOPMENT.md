@@ -6,10 +6,14 @@
 # 1. Copy environment variables (auto-created on first start-dev)
 cp .env.example .env
 
-# 2. Start everything
+# 2. Configure the external TTS server (edit .env)
+#    TTS_SERVER_URL=http://192.168.4.35:8000
+#    TTS_SERVER_API_KEY=dummy
+
+# 3. Start everything
 ./scripts/start-dev.sh
 
-# 3. Stop everything
+# 4. Stop everything
 ./scripts/stop-dev.sh
 ```
 
@@ -42,6 +46,7 @@ Stops all services. Use `keep` to stop processes but keep Redis running.
 | Backend API | http://localhost:8000 |
 | API Health | http://localhost:8000/api/health |
 | Swagger Docs | http://localhost:8000/docs |
+| TTS Server | `TTS_SERVER_URL` from `.env` (external) |
 
 ## Logs
 
@@ -60,6 +65,7 @@ tail -f .dev-logs/frontend.log  # Next.js dev server
 - **Python 3.12+** (with `uv` package manager)
 - **Node.js 20+** (with `pnpm`)
 - **Docker** (for Redis — or a local Redis server)
+- **External TTS Server** running (see `TTS_SERVER_URL` in `.env`)
 
 ### 1. Redis
 
@@ -83,6 +89,10 @@ uv pip install -r requirements.txt --python .venv/bin/python
 cd backend
 .venv/bin/celery -A workers.celery_app worker --loglevel=info --queues=tts --concurrency=1
 ```
+
+> **Note:** The backend no longer loads ML models locally. It proxies TTS
+> requests to the external server configured in `TTS_SERVER_URL`. No GPU
+> is needed in the backend container/process.
 
 ### 3. Frontend
 
@@ -122,6 +132,10 @@ docker compose down
 ./scripts/test-pipeline.sh
 ```
 
+> **Note:** The `worker` service no longer needs GPU access. TTS inference
+> runs on the external server (see `TTS_SERVER_URL` in `.env`). The worker
+> only needs network connectivity to that server.
+
 ---
 
 ## Environment Variables
@@ -130,7 +144,9 @@ See `.env.example` for all available variables. Key ones:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `GPU_DEVICE` | `cuda:0` | `cpu` for local dev without GPU |
+| `TTS_SERVER_URL` | `http://192.168.4.35:8000` | External OpenAI-compatible TTS server |
+| `TTS_SERVER_API_KEY` | `dummy` | API key for the TTS server |
 | `DATABASE_URL` | `sqlite+aiosqlite:///./ttsqwen.db` | SQLite for dev |
 | `REDIS_URL` | `redis://localhost:6379/0` | Redis broker |
 | `CORS_ORIGINS` | `["http://localhost:3000"]` | Allowed origins |
+| `GPU_DEVICE` | `cuda:0` | Legacy — only used for local model loading |

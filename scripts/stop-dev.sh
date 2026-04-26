@@ -3,7 +3,7 @@
 #
 # Stops all services started by start-dev.sh:
 #   - Frontend Next.js dev server
-#   - Celery worker
+#   - Celery worker (TTS proxy)
 #   - Backend FastAPI server
 #   - Redis Docker container
 #
