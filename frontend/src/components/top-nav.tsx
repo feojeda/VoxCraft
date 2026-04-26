@@ -13,12 +13,14 @@ import {
   LogOut,
   ChevronDown,
   Home,
+  List,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 
 const NAV_LINKS = [
   { href: "/", label: "Generate", icon: Home },
   { href: "/history", label: "History", icon: History },
+  { href: "/batches", label: "Batches", icon: List },
   { href: "/voices", label: "Voices", icon: Mic },
   { href: "/account", label: "Account", icon: User },
 ];

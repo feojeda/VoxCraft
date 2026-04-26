@@ -6,6 +6,7 @@ import { Trash2, History, Loader2 } from "lucide-react";
 import { apiClient } from "@/lib/api-client";
 import { AudioPlayer } from "@/components/audio-player";
 import { DownloadButtons } from "@/components/download-buttons";
+import { ShareButton } from "@/components/share-button";
 import type { HistoryItem } from "@/lib/types";
 
 function StatusBadge({ status }: { status: string }) {
@@ -83,6 +84,9 @@ function HistoryCard({
             wavUrl={item.audio_wav_url}
             mp3Url={item.audio_mp3_url}
           />
+          <div className="flex items-center justify-end gap-2 pt-2">
+            <ShareButton jobId={item.id} />
+          </div>
         </div>
       )}
 
