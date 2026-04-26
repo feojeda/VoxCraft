@@ -15,7 +15,7 @@ from app.config import settings
 from app.core.database import Base
 
 # Import all models so they register with Base.metadata
-from app.models import Job  # noqa: F401
+from app.models import ClonedVoice, Job, PronunciationDict  # noqa: F401
 
 config = context.config
 

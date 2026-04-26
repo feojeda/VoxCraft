@@ -1,20 +1,180 @@
-"""Voice catalog endpoint.
+"""Voice management endpoints.
 
-GET /api/voices — Return list of predefined speakers with metadata.
+Provides CRUD operations for cloned voices:
+- POST /api/voices — Upload audio for voice cloning
+- GET /api/voices — List cloned voices
+- GET /api/voices/{voice_id} — Get voice details
+- PATCH /api/voices/{voice_id} — Rename voice
+- DELETE /api/voices/{voice_id} — Delete voice
+
+Also provides:
+- GET /api/voices/predefined — List predefined speakers (legacy endpoint)
 """
 
-from fastapi import APIRouter
+import logging
+import os
+import shutil
+from pathlib import Path
+from uuid import uuid4
 
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.api.deps import get_db
+from app.config import settings
+from app.models.voice import ClonedVoice
+from app.schemas.voice import (
+    VoiceCreateRequest,
+    VoiceListResponse,
+    VoiceResponse,
+    VoiceUpdateRequest,
+)
+from app.services.audio_validator import AudioValidationError, validate_audio_file
 from workers.engine.model_manager import SPEAKERS
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["voices"])
 
 
-@router.get("/voices")
-async def list_voices() -> dict:
+@router.get("/voices/predefined")
+async def list_predefined_voices() -> dict:
     """Return the catalog of predefined TTS speakers.
 
     Returns 9 predefined speakers with id, name, language, gender,
     and description for frontend display.
     """
     return {"speakers": SPEAKERS, "total": len(SPEAKERS)}
+
+
+@router.post("/voices", status_code=201, response_model=VoiceResponse)
+async def create_voice(
+    audio: UploadFile = File(...),
+    ref_text: str = Form(...),
+    name: str = Form(...),
+    db: AsyncSession = Depends(get_db),
+) -> VoiceResponse:
+    """Upload an audio file for voice cloning.
+
+    Validates the audio file, saves it to disk, and creates a
+    ClonedVoice record in the database.
+    """
+    # Validate file type by content type and extension
+    allowed_types = {"audio/wav", "audio/x-wav", "audio/mpeg", "audio/mp3", "audio/ogg", "audio/webm"}
+    if audio.content_type not in allowed_types:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported audio format: {audio.content_type}. Please upload WAV, MP3, or OGG.",
+        )
+
+    voice_id = str(uuid4())
+    voice_dir = Path(settings.AUDIO_OUTPUT_DIR) / "voices" / voice_id
+    voice_dir.mkdir(parents=True, exist_ok=True)
+
+    # Determine extension from content type
+    ext = ".wav"
+    if audio.content_type in {"audio/mpeg", "audio/mp3"}:
+        ext = ".mp3"
+    elif audio.content_type == "audio/ogg":
+        ext = ".ogg"
+    elif audio.content_type == "audio/webm":
+        ext = ".webm"
+
+    file_path = voice_dir / f"reference{ext}"
+
+    try:
+        # Save uploaded file
+        with open(file_path, "wb") as f:
+            shutil.copyfileobj(audio.file, f)
+    except Exception as e:
+        logger.error("Failed to save uploaded audio: %s", e)
+        raise HTTPException(status_code=500, detail="Failed to save uploaded audio") from e
+    finally:
+        await audio.close()
+
+    # Validate audio
+    try:
+        validation = validate_audio_file(str(file_path))
+    except AudioValidationError as e:
+        # Clean up saved file on validation failure
+        shutil.rmtree(voice_dir, ignore_errors=True)
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+    # Create database record
+    voice = ClonedVoice(
+        id=voice_id,
+        name=name,
+        audio_path=str(file_path),
+        ref_text=ref_text,
+        duration_seconds=validation["duration"],
+        sample_rate=validation["sample_rate"],
+    )
+    db.add(voice)
+    await db.commit()
+    await db.refresh(voice)
+
+    logger.info("Created cloned voice %s: %s (%.2fs)", voice_id, name, validation["duration"])
+    return VoiceResponse.model_validate(voice)
+
+
+@router.get("/voices", response_model=VoiceListResponse)
+async def list_voices(db: AsyncSession = get_db()) -> VoiceListResponse:
+    """List all cloned voices.
+
+    Returns a paginated list of user-uploaded voice cloning samples.
+    """
+    result = await db.execute(select(ClonedVoice).order_by(ClonedVoice.created_at.desc()))
+    voices = result.scalars().all()
+    return VoiceListResponse(
+        voices=[VoiceResponse.model_validate(v) for v in voices],
+        total=len(voices),
+    )
+
+
+@router.get("/voices/{voice_id}", response_model=VoiceResponse)
+async def get_voice(voice_id: str, db: AsyncSession = get_db()) -> VoiceResponse:
+    """Get details for a single cloned voice."""
+    voice = await db.get(ClonedVoice, voice_id)
+    if voice is None:
+        raise HTTPException(status_code=404, detail=f"Voice '{voice_id}' not found")
+    return VoiceResponse.model_validate(voice)
+
+
+@router.patch("/voices/{voice_id}", response_model=VoiceResponse)
+async def update_voice(
+    voice_id: str,
+    request: VoiceUpdateRequest,
+    db: AsyncSession = Depends(get_db),
+) -> VoiceResponse:
+    """Rename a cloned voice."""
+    voice = await db.get(ClonedVoice, voice_id)
+    if voice is None:
+        raise HTTPException(status_code=404, detail=f"Voice '{voice_id}' not found")
+
+    voice.name = request.name
+    await db.commit()
+    await db.refresh(voice)
+
+    logger.info("Renamed voice %s to '%s'", voice_id, request.name)
+    return VoiceResponse.model_validate(voice)
+
+
+@router.delete("/voices/{voice_id}", status_code=204)
+async def delete_voice(voice_id: str, db: AsyncSession = get_db()) -> None:
+    """Delete a cloned voice and its associated audio file."""
+    voice = await db.get(ClonedVoice, voice_id)
+    if voice is None:
+        raise HTTPException(status_code=404, detail=f"Voice '{voice_id}' not found")
+
+    # Remove audio file and parent directory
+    try:
+        voice_dir = Path(voice.audio_path).parent
+        shutil.rmtree(voice_dir, ignore_errors=True)
+    except Exception as e:
+        logger.warning("Failed to remove audio directory for voice %s: %s", voice_id, e)
+
+    await db.delete(voice)
+    await db.commit()
+
+    logger.info("Deleted voice %s", voice_id)
