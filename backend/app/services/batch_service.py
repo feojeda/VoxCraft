@@ -5,6 +5,7 @@ with Celery dispatch, batch status tracking, and on-demand ZIP
 streaming with manifest.
 """
 
+import asyncio
 import csv
 import io
 import logging
@@ -418,7 +419,7 @@ class BatchService:
                 filename = ""
 
                 if job.status == "completed":
-                    if job.audio_mp3_path and os.path.exists(job.audio_mp3_path):
+                    if job.audio_mp3_path and await asyncio.to_thread(os.path.exists, job.audio_mp3_path):
                         mp3_arcname = f"{base_name}.mp3"
                         zf.write(job.audio_mp3_path, arcname=mp3_arcname)
                         filename = mp3_arcname
@@ -427,7 +428,7 @@ class BatchService:
                     if (
                         format == "both"
                         and job.audio_wav_path
-                        and os.path.exists(job.audio_wav_path)
+                        and await asyncio.to_thread(os.path.exists, job.audio_wav_path)
                     ):
                         wav_arcname = f"{base_name}.wav"
                         zf.write(job.audio_wav_path, arcname=wav_arcname)
