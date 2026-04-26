@@ -12,8 +12,8 @@ Build a public text-to-speech web application that lets content creators generat
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Core TTS Pipeline** - Infrastructure, Qwen3-TTS engine integration, async job system, predefined voices, and audio output
-- [ ] **Phase 2: Voice Cloning & Expressive Control** - Voice cloning from uploads/recordings, voice management, emotion presets, natural language prosody, pronunciation dictionary
+- [x] **Phase 1: Core TTS Pipeline** - Infrastructure, Qwen3-TTS engine integration, async job system, predefined voices, and audio output
+- [x] **Phase 2: Voice Cloning & Expressive Control** - Voice cloning from uploads/recordings, voice management, emotion presets, natural language prosody, pronunciation dictionary
 - [ ] **Phase 3: User Accounts & Complete Frontend** - User auth, generation history, voice presets, full web UI with waveform playback
 - [ ] **Phase 4: Batch Processing & Sharing** - CSV batch upload, ZIP download, public share links
 
@@ -31,11 +31,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   5. User can preview audio in-browser, download as MP3, and download as WAV
 **Plans**: 5 plans
 Plans:
-- [ ] 01-01-PLAN.md — Backend foundation (FastAPI + SQLAlchemy + Celery + Docker)
-- [ ] 01-02-PLAN.md — Frontend foundation (Next.js + Tailwind dark theme + API client)
-- [ ] 01-03-PLAN.md — TTS engine + async job pipeline (QwenTTSEngine + Celery tasks + audio serving)
-- [ ] 01-04-PLAN.md — Frontend TTS UI (voice picker + text input + speed slider + generation flow)
-- [ ] 01-05-PLAN.md — Audio player + downloads + Docker integration + end-to-end verification
+- [x] 01-01-PLAN.md — Backend foundation (FastAPI + SQLAlchemy + Celery + Docker)
+- [x] 01-02-PLAN.md — Frontend foundation (Next.js + Tailwind dark theme + API client)
+- [x] 01-03-PLAN.md — TTS engine + async job pipeline (QwenTTSEngine + Celery tasks + audio serving)
+- [x] 01-04-PLAN.md — Frontend TTS UI (voice picker + text input + speed slider + generation flow)
+- [x] 01-05-PLAN.md — Audio player + downloads + Docker integration + end-to-end verification
 **UI hint**: yes
 
 ### Phase 2: Voice Cloning & Expressive Control
@@ -50,11 +50,11 @@ Plans:
   5. User can add pronunciation overrides for specific words (brand names, technical terms)
 **Plans**: 5 plans
 Plans:
-- [ ] 02-01-PLAN.md — Voice clone backend (DB models, audio validation, voice management API)
-- [ ] 02-02-PLAN.md — Prosody backend (TTS engine extension for clone & prosody, pronunciation preprocessing)
-- [ ] 02-03-PLAN.md — Task integration (Celery tasks for clone & prosody, generation API wiring, pronunciation endpoints)
-- [ ] 02-04-PLAN.md — Frontend voice clone UI (upload, recording, voice library management)
-- [ ] 02-05-PLAN.md — Frontend prosody UI (emotion selector, prosody input, pronunciation dictionary, generation page updates)
+- [x] 02-01-PLAN.md — Voice clone backend (DB models, audio validation, voice management API)
+- [x] 02-02-PLAN.md — Prosody backend (TTS engine extension for clone & prosody, pronunciation preprocessing)
+- [x] 02-03-PLAN.md — Task integration (Celery tasks for clone & prosody, generation API wiring, pronunciation endpoints)
+- [x] 02-04-PLAN.md — Frontend voice clone UI (upload, recording, voice library management)
+- [x] 02-05-PLAN.md — Frontend prosody UI (emotion selector, prosody input, pronunciation dictionary, generation page updates)
 **UI hint**: yes
 
 ### Phase 3: User Accounts & Complete Frontend
@@ -87,7 +87,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Core TTS Pipeline | 0/5 | Planning complete | - |
-| 2. Voice Cloning & Expressive Control | 0/5 | Planning complete | - |
+| 1. Core TTS Pipeline | 5/5 | Complete | 2026-04-25 |
+| 2. Voice Cloning & Expressive Control | 5/5 | Complete | 2026-04-25 |
 | 3. User Accounts & Complete Frontend | 0/? | Not started | - |
 | 4. Batch Processing & Sharing | 0/? | Not started | - |
