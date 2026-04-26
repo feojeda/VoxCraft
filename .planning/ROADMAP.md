@@ -85,7 +85,7 @@ Plans:
 **Plans**: 5 plans
 Plans:
 - [x] 04-01-PLAN.md — Backend models and schemas (BatchJob, ShareLink, batch_id on Job)
-- [ ] 04-02-PLAN.md — Backend batch service and API (CSV parsing, job creation, ZIP generation, batch routes)
+- [x] 04-02-PLAN.md — Backend batch service and API (CSV parsing, job creation, ZIP generation, batch routes)
 - [ ] 04-03-PLAN.md — Backend share service and API (token generation, public audio, share routes)
 - [ ] 04-04-PLAN.md — Frontend batch UI (types, API client, upload component, batch list/detail pages)
 - [ ] 04-05-PLAN.md — Frontend sharing and integration (share button, public page, account nav history updates)

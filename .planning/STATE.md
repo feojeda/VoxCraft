@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 04-batch-processing-sharing-01-PLAN.md
-last_updated: "2026-04-26T07:13:01.831Z"
+stopped_at: Completed 04-02-SUMMARY.md
+last_updated: "2026-04-26T07:22:40.789Z"
 last_activity: 2026-04-26
 progress:
   total_phases: 4
   completed_phases: 3
   total_plans: 19
-  completed_plans: 15
-  percent: 79
+  completed_plans: 16
+  percent: 84
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2025-04-25)
 ## Current Position
 
 Phase: 04 (batch-processing-sharing) — EXECUTING
-Plan: 2 of 5
+Plan: 3 of 5
 Status: Ready to execute
 Last activity: 2026-04-26
 
@@ -55,6 +55,7 @@ Progress: [██████████░░] 75%
 
 *Updated after each plan completion*
 | Phase 04-batch-processing-sharing P01 | 147 | 2 tasks | 7 files |
+| Phase 04-batch-processing-sharing P02 | 5min | 3 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -71,6 +72,8 @@ Recent decisions affecting current work:
 - Pronunciation: Word-boundary regex with longest-first sorting to prevent nested replacements
 - Auth: JWT in httpOnly cookie with bcrypt password hashing; all API routes protected
 - Frontend auth: React Context for auth state, middleware for route protection, cookie-based sessions
+- [Phase 04-batch-processing-sharing]: Failed jobs for invalid CSV rows: invalid rows create immediately-failed Job records so they appear in batch results, satisfying the must-have that every CSV row creates a Job
+- [Phase 04-batch-processing-sharing]: Dual Celery task dispatch for batch: predefined speakers use generate_speech, cloned voices use generate_voice_clone, matching the existing tts.py logic
 
 ### Pending Todos
 
@@ -91,6 +94,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-04-26T07:13:01.828Z
-Stopped at: Completed 04-batch-processing-sharing-01-PLAN.md
+Last session: 2026-04-26T07:22:40.786Z
+Stopped at: Completed 04-02-SUMMARY.md
 Resume file: None
