@@ -1,7 +1,7 @@
 // Shared TypeScript types matching backend Pydantic schemas
 
 // TTS mode
-type TTSMode = "speech" | "voice-design" | "voice-clone";
+export type TTSMode = "speech" | "voice-design" | "voice-clone";
 
 // Request types
 export interface TTSRequest {
@@ -45,6 +45,17 @@ export interface Speaker {
   language: string; // e.g. "English"
   gender: string; // e.g. "Male"
   description: string; // e.g. "Clear and professional"
+}
+
+// Cloned voice response
+export interface VoiceResponse {
+  id: string;
+  name: string;
+  audio_path: string;
+  ref_text: string;
+  duration_seconds: number;
+  sample_rate: number;
+  created_at: string;
 }
 
 // API error type

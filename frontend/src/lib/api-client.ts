@@ -3,6 +3,7 @@ import type {
   TTSJobResponse,
   JobStatusResponse,
   Speaker,
+  VoiceResponse,
   ApiError,
 } from "./types";
 
@@ -67,9 +68,42 @@ export const apiClient = {
     return request<JobStatusResponse>(`/jobs/${jobId}`);
   },
 
-  /** GET /api/voices — Get available speakers */
-  getSpeakers(): Promise<Speaker[]> {
-    return request<Speaker[]>("/voices");
+  /** GET /api/voices/predefined — Get available predefined speakers */
+  getSpeakers(): Promise<{ speakers: Speaker[]; total: number }> {
+    return request<{ speakers: Speaker[]; total: number }>("/voices/predefined");
+  },
+
+  /** POST /api/voices — Upload a cloned voice */
+  uploadVoice(audioFile: File, refText: string, name: string): Promise<VoiceResponse> {
+    const formData = new FormData();
+    formData.append("audio", audioFile);
+    formData.append("ref_text", refText);
+    formData.append("name", name);
+    return request<VoiceResponse>("/voices", {
+      method: "POST",
+      body: formData,
+      headers: {}, // Let browser set Content-Type with boundary
+    });
+  },
+
+  /** GET /api/voices — List cloned voices */
+  listVoices(): Promise<{ voices: VoiceResponse[]; total: number }> {
+    return request<{ voices: VoiceResponse[]; total: number }>("/voices");
+  },
+
+  /** PATCH /api/voices/{id} — Rename a cloned voice */
+  updateVoice(voiceId: string, name: string): Promise<VoiceResponse> {
+    return request<VoiceResponse>(`/voices/${voiceId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ name }),
+    });
+  },
+
+  /** DELETE /api/voices/{id} — Delete a cloned voice */
+  deleteVoice(voiceId: string): Promise<void> {
+    return request<void>(`/voices/${voiceId}`, {
+      method: "DELETE",
+    });
   },
 };
 
