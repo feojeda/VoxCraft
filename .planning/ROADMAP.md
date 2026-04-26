@@ -48,7 +48,13 @@ Plans:
   3. User can manage their cloned voices (view list, rename, delete)
   4. User can control speech emotion using presets (happy, sad, angry, neutral, whisper) or natural language instructions
   5. User can add pronunciation overrides for specific words (brand names, technical terms)
-**Plans**: TBD
+**Plans**: 5 plans
+Plans:
+- [ ] 02-01-PLAN.md — Voice clone backend (DB models, audio validation, voice management API)
+- [ ] 02-02-PLAN.md — Prosody backend (TTS engine extension for clone & prosody, pronunciation preprocessing)
+- [ ] 02-03-PLAN.md — Task integration (Celery tasks for clone & prosody, generation API wiring, pronunciation endpoints)
+- [ ] 02-04-PLAN.md — Frontend voice clone UI (upload, recording, voice library management)
+- [ ] 02-05-PLAN.md — Frontend prosody UI (emotion selector, prosody input, pronunciation dictionary, generation page updates)
 **UI hint**: yes
 
 ### Phase 3: User Accounts & Complete Frontend
@@ -82,6 +88,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Core TTS Pipeline | 0/5 | Planning complete | - |
-| 2. Voice Cloning & Expressive Control | 0/? | Not started | - |
+| 2. Voice Cloning & Expressive Control | 0/5 | Planning complete | - |
 | 3. User Accounts & Complete Frontend | 0/? | Not started | - |
 | 4. Batch Processing & Sharing | 0/? | Not started | - |
