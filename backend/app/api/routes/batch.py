@@ -6,7 +6,7 @@ for bulk TTS generation jobs.
 
 import logging
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -58,8 +58,8 @@ async def create_batch(
 
 @router.get("/batches", response_model=BatchListResponse)
 async def list_batches(
-    skip: int = 0,
-    limit: int = 20,
+    skip: int = Query(0, ge=0),
+    limit: int = Query(20, ge=1, le=100),
     current_user: User = Depends(get_current_user),
 ) -> BatchListResponse:
     """List the authenticated user's batches.
