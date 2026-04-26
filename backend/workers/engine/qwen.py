@@ -23,6 +23,15 @@ logger = logging.getLogger(__name__)
 class QwenTTSEngine(BaseTTSEngine):
     """TTS engine that proxies to an OpenAI-compatible HTTP server."""
 
+    # Emotion presets mapped to natural language instruct strings
+    EMOTION_PRESETS: dict[str, str] = {
+        "happy": "Speak happily and cheerfully",
+        "sad": "Speak sadly with a melancholic tone",
+        "angry": "Speak angrily with intensity",
+        "neutral": "",  # No instruction for neutral
+        "whisper": "Whisper softly",
+    }
+
     def __init__(self, base_url: str, api_key: str = "dummy") -> None:
         """Initialize with the TTS server base URL.
 
@@ -188,6 +197,18 @@ class QwenTTSEngine(BaseTTSEngine):
             payload["ref_text"] = ref_text
 
         return self._call_endpoint("/v1/audio/voice-clone", payload)
+
+    @classmethod
+    def map_emotion_preset(cls, preset: str) -> str:
+        """Map an emotion preset name to a natural language instruct string.
+
+        Args:
+            preset: Emotion preset name (happy, sad, angry, neutral, whisper).
+
+        Returns:
+            Natural language instruction string, or empty string for neutral.
+        """
+        return cls.EMOTION_PRESETS.get(preset, "")
 
     def get_speakers(self) -> list[dict]:
         """Return the list of predefined TTS speakers."""
