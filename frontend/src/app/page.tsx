@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { Sparkles } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Sparkles, Library } from "lucide-react";
+import Link from "next/link";
 import { VoicePicker } from "@/components/voice-picker";
 import { TextInput } from "@/components/text-input";
 import { SpeedSlider } from "@/components/speed-slider";
@@ -14,18 +15,34 @@ import { EmptyState } from "@/components/empty-state";
 import { ModeSelector } from "@/components/mode-selector";
 import { VoiceDesignInput } from "@/components/voice-design-input";
 import { VoiceCloneInput } from "@/components/voice-clone-input";
+import { EmotionSelector } from "@/components/EmotionSelector";
+import { ProsodyInput } from "@/components/ProsodyInput";
+import { PronunciationDict } from "@/components/PronunciationDict";
 import { useTTSGeneration } from "@/hooks/use-tts-generation";
-import type { TTSMode } from "@/lib/types";
+import { apiClient } from "@/lib/api-client";
+import type { TTSMode, VoiceResponse, PronunciationEntry } from "@/lib/types";
 
 export default function Home() {
   const [text, setText] = useState("");
   const [mode, setMode] = useState<TTSMode>("speech");
   const [selectedSpeaker, setSelectedSpeaker] = useState<string | null>(null);
+  const [clonedVoiceId, setClonedVoiceId] = useState<string | null>(null);
   const [speed, setSpeed] = useState(1.0);
   const [instructions, setInstructions] = useState("");
   const [refAudio, setRefAudio] = useState<string | null>(null);
   const [refText, setRefText] = useState("");
   const [textError, setTextError] = useState<string | undefined>(undefined);
+
+  // Phase 2 prosody state
+  const [emotionPreset, setEmotionPreset] = useState<string | null>(null);
+  const [instruct, setInstruct] = useState("");
+  const [pronunciationEnabled, setPronunciationEnabled] = useState(false);
+  const [pronunciationEntries, setPronunciationEntries] = useState<
+    PronunciationEntry[]
+  >([]);
+
+  // Cloned voices
+  const [clonedVoices, setClonedVoices] = useState<VoiceResponse[]>([]);
 
   const {
     generate,
@@ -38,22 +55,50 @@ export default function Home() {
     text,
     mode,
     speaker: selectedSpeaker,
+    clonedVoiceId,
     speed,
     instructions,
     refAudio,
     refText,
+    instruct,
+    emotionPreset,
+    pronunciationEnabled,
   });
+
+  // Load cloned voices and pronunciation entries
+  const loadData = useCallback(async () => {
+    try {
+      const voicesData = await apiClient.listVoices();
+      setClonedVoices(voicesData.voices);
+    } catch {
+      // Silently fail — cloned voices are optional
+    }
+    try {
+      const pronData = await apiClient.listPronunciationEntries();
+      setPronunciationEntries(
+        pronData.entries.map((e) => ({
+          id: e.id,
+          word: e.word,
+          replacement: e.replacement,
+        }))
+      );
+    } catch {
+      // Silently fail — pronunciation is optional
+    }
+  }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const handleTextChange = (newText: string) => {
     setText(newText);
-    // Clear error when user starts typing
     if (textError && newText.trim().length > 0) {
       setTextError(undefined);
     }
   };
 
   const handleGenerate = () => {
-    // Validate text input (D-16: red outline on invalid)
     if (!text.trim()) {
       setTextError("Please enter some text");
       return;
@@ -62,7 +107,6 @@ export default function Home() {
     generate();
   };
 
-  // Map generation status to JobStatus for ProgressBar
   const jobStatusForProgress =
     generationStatus === "creating"
       ? ("queued" as const)
@@ -74,13 +118,19 @@ export default function Home() {
             ? ("failed" as const)
             : null;
 
-  // Determine if generate button should be disabled based on mode
   const isGenerateDisabled = () => {
     if (!text.trim()) return true;
-    if (mode === "speech" && !selectedSpeaker) return true;
+    if (mode === "speech" && !selectedSpeaker && !clonedVoiceId) return true;
     if (mode === "voice-design" && !instructions.trim()) return true;
     if (mode === "voice-clone" && !refAudio) return true;
     return false;
+  };
+
+  // When mode changes, reset voice selections
+  const handleModeChange = (newMode: TTSMode) => {
+    setMode(newMode);
+    setSelectedSpeaker(null);
+    setClonedVoiceId(null);
   };
 
   return (
@@ -97,6 +147,13 @@ export default function Home() {
           <p className="mt-2 text-[var(--text-secondary)]">
             Generate speech from text
           </p>
+          <Link
+            href="/voices"
+            className="mt-3 inline-flex items-center gap-1 text-sm text-[var(--accent)] transition-colors hover:text-[var(--accent-hover)]"
+          >
+            <Library className="h-4 w-4" />
+            Voice Library →
+          </Link>
         </header>
 
         <div className="space-y-6">
@@ -120,15 +177,85 @@ export default function Home() {
 
             {/* Mode selector */}
             <div className="mb-4">
-              <ModeSelector mode={mode} onChange={setMode} />
+              <ModeSelector mode={mode} onChange={handleModeChange} />
             </div>
 
             {/* Mode-specific inputs */}
             {mode === "speech" && (
-              <div className="mb-4">
+              <div className="mb-4 space-y-4">
+                {/* Predefined voices */}
                 <VoicePicker
                   selectedSpeaker={selectedSpeaker}
-                  onSelect={setSelectedSpeaker}
+                  onSelect={(id) => {
+                    setSelectedSpeaker(id);
+                    setClonedVoiceId(null);
+                  }}
+                />
+
+                {/* Cloned voices */}
+                <div>
+                  <span className="mb-2 block text-sm font-medium text-[var(--text-secondary)]">
+                    My Voices
+                  </span>
+                  {clonedVoices.length === 0 ? (
+                    <p className="text-xs text-[var(--text-secondary)]">
+                      No cloned voices yet.{" "}
+                      <Link
+                        href="/voices"
+                        className="text-[var(--accent)] hover:underline"
+                      >
+                        Create one in Voice Library →
+                      </Link>
+                    </p>
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      {clonedVoices.map((voice) => {
+                        const isSelected = clonedVoiceId === voice.id;
+                        return (
+                          <button
+                            key={voice.id}
+                            type="button"
+                            onClick={() => {
+                              setClonedVoiceId(
+                                isSelected ? null : voice.id
+                              );
+                              setSelectedSpeaker(null);
+                            }}
+                            className={`rounded-lg border px-3 py-2 text-left text-sm transition-all ${
+                              isSelected
+                                ? "border-[var(--accent)] bg-[var(--accent)]/10 text-[var(--accent)]"
+                                : "border-[var(--border)] bg-[var(--background)] text-[var(--text-primary)] hover:border-[var(--text-secondary)] hover:bg-[var(--surface-hover)]"
+                            }`}
+                          >
+                            <span className="font-medium">{voice.name}</span>
+                            <span className="ml-1 text-xs text-[var(--text-secondary)]">
+                              {voice.duration_seconds.toFixed(0)}s
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                {/* Speed slider */}
+                <SpeedSlider value={speed} onChange={setSpeed} />
+
+                {/* Emotion selector */}
+                <EmotionSelector
+                  value={emotionPreset}
+                  onSelect={setEmotionPreset}
+                />
+
+                {/* Prosody input */}
+                <ProsodyInput value={instruct} onChange={setInstruct} />
+
+                {/* Pronunciation dictionary */}
+                <PronunciationDict
+                  enabled={pronunciationEnabled}
+                  onToggle={setPronunciationEnabled}
+                  entries={pronunciationEntries}
+                  onEntriesChange={setPronunciationEntries}
                 />
               </div>
             )}
@@ -150,13 +277,6 @@ export default function Home() {
                   onRefAudioChange={setRefAudio}
                   onRefTextChange={setRefText}
                 />
-              </div>
-            )}
-
-            {/* Speed slider (only for speech mode) */}
-            {mode === "speech" && (
-              <div className="mb-4">
-                <SpeedSlider value={speed} onChange={setSpeed} />
               </div>
             )}
 
@@ -183,10 +303,8 @@ export default function Home() {
               Audio Output
             </h2>
 
-            {/* Empty state — shown before first generation */}
             {!audioUrls && !isGenerating && <EmptyState />}
 
-            {/* Audio player — shown during generation or when audio is ready */}
             {(audioUrls !== null || isGenerating) && (
               <AudioPlayer
                 audioUrl={audioUrls?.wav ?? null}
@@ -194,7 +312,6 @@ export default function Home() {
               />
             )}
 
-            {/* Download buttons — shown when audio is ready */}
             {audioUrls && (
               <DownloadButtons
                 wavUrl={audioUrls.wav}

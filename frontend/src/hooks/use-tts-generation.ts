@@ -18,10 +18,14 @@ interface UseTTSGenerationOptions {
   text: string;
   mode: TTSMode;
   speaker: string | null;
+  clonedVoiceId: string | null;
   speed: number;
   instructions: string;
   refAudio: string | null;
   refText: string;
+  instruct: string;
+  emotionPreset: string | null;
+  pronunciationEnabled: boolean;
 }
 
 const POLL_INTERVAL = 2000; // 2 seconds
@@ -30,10 +34,14 @@ export function useTTSGeneration({
   text,
   mode,
   speaker,
+  clonedVoiceId,
   speed,
   instructions,
   refAudio,
   refText,
+  instruct,
+  emotionPreset,
+  pronunciationEnabled,
 }: UseTTSGenerationOptions): UseTTSGenerationReturn {
   const queryClient = useQueryClient();
   const [jobId, setJobId] = useState<string | null>(null);
@@ -98,9 +106,14 @@ export function useTTSGeneration({
       mode,
       language: "auto",
       speed,
+      instruct: instruct || undefined,
+      emotion_preset: emotionPreset || undefined,
+      pronunciation_enabled: pronunciationEnabled,
     };
 
-    if (mode === "speech") {
+    if (clonedVoiceId) {
+      base.cloned_voice_id = clonedVoiceId;
+    } else if (mode === "speech") {
       base.speaker = speaker!;
     } else if (mode === "voice-design") {
       base.instructions = instructions;
@@ -110,7 +123,7 @@ export function useTTSGeneration({
     }
 
     return base;
-  }, [text, mode, speaker, speed, instructions, refAudio, refText]);
+  }, [text, mode, speaker, clonedVoiceId, speed, instructions, refAudio, refText, instruct, emotionPreset, pronunciationEnabled]);
 
   // Create job mutation
   const createJobMutation = useMutation({
@@ -136,7 +149,7 @@ export function useTTSGeneration({
     }
 
     // Mode-specific validation
-    if (mode === "speech" && !speaker) {
+    if (mode === "speech" && !speaker && !clonedVoiceId) {
       setError("Please select a voice");
       return;
     }
@@ -144,8 +157,8 @@ export function useTTSGeneration({
       setError("Please describe the voice you want to create");
       return;
     }
-    if (mode === "voice-clone" && !refAudio) {
-      setError("Please upload a reference audio file");
+    if (mode === "voice-clone" && !refAudio && !clonedVoiceId) {
+      setError("Please upload a reference audio file or select a cloned voice");
       return;
     }
 
@@ -163,7 +176,7 @@ export function useTTSGeneration({
     queryClient.removeQueries({ queryKey: ["job-status"] });
 
     createJobMutation.mutate();
-  }, [text, mode, speaker, instructions, refAudio, refText, createJobMutation, queryClient]);
+  }, [text, mode, speaker, clonedVoiceId, instructions, refAudio, refText, createJobMutation, queryClient]);
 
   const isGenerating =
     status === "creating" || status === "polling";

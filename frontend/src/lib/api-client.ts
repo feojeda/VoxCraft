@@ -105,6 +105,26 @@ export const apiClient = {
       method: "DELETE",
     });
   },
+
+  /** POST /api/pronunciation — Create pronunciation entry */
+  createPronunciationEntry(word: string, replacement: string): Promise<{ id: string; word: string; replacement: string; created_at: string }> {
+    return request<{ id: string; word: string; replacement: string; created_at: string }>("/pronunciation", {
+      method: "POST",
+      body: JSON.stringify({ word, replacement }),
+    });
+  },
+
+  /** GET /api/pronunciation — List pronunciation entries */
+  listPronunciationEntries(): Promise<{ entries: { id: string; word: string; replacement: string; created_at: string }[]; total: number }> {
+    return request<{ entries: { id: string; word: string; replacement: string; created_at: string }[]; total: number }>("/pronunciation");
+  },
+
+  /** DELETE /api/pronunciation/{id} — Delete pronunciation entry */
+  deletePronunciationEntry(entryId: string): Promise<void> {
+    return request<void>(`/pronunciation/${entryId}`, {
+      method: "DELETE",
+    });
+  },
 };
 
 export { ApiClientError };

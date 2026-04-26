@@ -8,12 +8,21 @@ export interface TTSRequest {
   text: string; // 1-50000 chars
   mode: TTSMode; // speech | voice-design | voice-clone
   speaker?: string; // for speech mode, e.g. "ryan", "serena"
+  cloned_voice_id?: string; // use persisted cloned voice
   language?: string; // default "auto"
   speed?: number; // 0.5 - 2.0, default 1.0
   instruct?: string; // for speech mode
   instructions?: string; // for voice-design mode
   ref_audio?: string; // for voice-clone mode
   ref_text?: string; // for voice-clone mode
+  emotion_preset?: string; // happy, sad, angry, neutral, whisper
+  pronunciation_enabled?: boolean; // default false
+}
+
+export interface PronunciationEntry {
+  id: string;
+  word: string;
+  replacement: string;
 }
 
 // Response types
