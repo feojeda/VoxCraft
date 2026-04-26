@@ -110,6 +110,16 @@ export interface HistoryListResponse {
   total: number;
 }
 
+// Preset types
+export interface VoicePreset {
+  id: string;
+  name: string;
+  speed: number;
+  emotion_preset: string | null;
+  instruct: string | null;
+  created_at: string;
+}
+
 // Predefined Qwen3-TTS CustomVoice speakers (from research F-01)
 export const PREDEFINED_SPEAKERS: Speaker[] = [
   {

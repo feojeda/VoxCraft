@@ -9,6 +9,7 @@ import type {
   LoginRequest,
   RegisterRequest,
   HistoryListResponse,
+  VoicePreset,
 } from "./types";
 
 const API_BASE_URL =
@@ -169,6 +170,31 @@ export const apiClient = {
   /** DELETE /api/history/{jobId} — Delete a history item */
   deleteHistoryItem(jobId: string): Promise<void> {
     return request<void>(`/history/${jobId}`, {
+      method: "DELETE",
+    });
+  },
+
+  /** GET /api/presets — List voice presets */
+  getPresets(): Promise<{ presets: VoicePreset[]; total: number }> {
+    return request<{ presets: VoicePreset[]; total: number }>("/presets");
+  },
+
+  /** POST /api/presets — Create a voice preset */
+  createPreset(preset: {
+    name: string;
+    speed: number;
+    emotion_preset: string | null;
+    instruct: string | null;
+  }): Promise<VoicePreset> {
+    return request<VoicePreset>("/presets", {
+      method: "POST",
+      body: JSON.stringify(preset),
+    });
+  },
+
+  /** DELETE /api/presets/{presetId} — Delete a voice preset */
+  deletePreset(presetId: string): Promise<void> {
+    return request<void>(`/presets/${presetId}`, {
       method: "DELETE",
     });
   },

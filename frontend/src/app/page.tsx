@@ -18,6 +18,7 @@ import { VoiceCloneInput } from "@/components/voice-clone-input";
 import { EmotionSelector } from "@/components/EmotionSelector";
 import { ProsodyInput } from "@/components/ProsodyInput";
 import { PronunciationDict } from "@/components/PronunciationDict";
+import { VoicePresetControls } from "@/components/voice-preset-controls";
 import { useTTSGeneration } from "@/hooks/use-tts-generation";
 import { apiClient } from "@/lib/api-client";
 import type { TTSMode, VoiceResponse, PronunciationEntry } from "@/lib/types";
@@ -105,6 +106,16 @@ export default function Home() {
     }
     setTextError(undefined);
     generate();
+  };
+
+  const handleLoadPreset = (preset: {
+    speed: number;
+    emotion_preset: string | null;
+    instruct: string | null;
+  }) => {
+    setSpeed(preset.speed);
+    setEmotionPreset(preset.emotion_preset);
+    setInstruct(preset.instruct ?? "");
   };
 
   const jobStatusForProgress =
@@ -256,6 +267,14 @@ export default function Home() {
                   onToggle={setPronunciationEnabled}
                   entries={pronunciationEntries}
                   onEntriesChange={setPronunciationEntries}
+                />
+
+                {/* Voice presets */}
+                <VoicePresetControls
+                  currentSpeed={speed}
+                  currentEmotion={emotionPreset}
+                  currentInstruct={instruct}
+                  onLoadPreset={handleLoadPreset}
                 />
               </div>
             )}
