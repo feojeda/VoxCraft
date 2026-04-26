@@ -195,6 +195,7 @@ export default function BatchDetailPage({
   const items = batch?.items ?? [];
   const isCompleted = batch?.status === "completed";
   const isProcessing = batch?.status === "processing" || batch?.status === "queued";
+  const isDone = batch?.status === "completed" || batch?.status === "failed";
   const progressPercent = batch && batch.total_items > 0
     ? Math.round((batch.completed_count / batch.total_items) * 100)
     : 0;
@@ -270,7 +271,7 @@ export default function BatchDetailPage({
               <ProgressBar progress={progressPercent} />
 
               {/* ZIP download */}
-              {isCompleted && (
+              {isDone && batch?.completed_count > 0 && (
                 <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-[var(--border)] pt-4">
                   <select
                     value={zipFormat}
