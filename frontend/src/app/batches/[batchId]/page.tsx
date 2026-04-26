@@ -195,7 +195,7 @@ export default function BatchDetailPage({
   const items = batch?.items ?? [];
   const isCompleted = batch?.status === "completed";
   const isProcessing = batch?.status === "processing" || batch?.status === "queued";
-  const progressPercent = batch
+  const progressPercent = batch && batch.total_items > 0
     ? Math.round((batch.completed_count / batch.total_items) * 100)
     : 0;
 
