@@ -1,40 +1,36 @@
-"""Qwen3-TTS engine adapter.
+"""Qwen3-TTS engine adapter (HTTP client).
 
-Wraps the Qwen3-TTS CustomVoice model's generate_custom_voice API
-into the BaseTTSEngine interface. Handles speaker ID normalization,
-GPU inference context, and audio output formatting.
+Calls the OpenAI-compatible TTS server via HTTP instead of loading
+the model locally. Expects a server running at TTS_SERVER_URL with
+/v1/audio/speech endpoint.
 """
 
+import io
 import logging
 
+import httpx
 import numpy as np
-import torch
+import soundfile as sf
 
 from workers.engine.base import BaseTTSEngine, SynthesisResult
-from workers.engine.model_manager import (
-    SPEAKERS,
-    SUPPORTED_LANGUAGES,
-    VALID_SPEAKER_IDS,
-)
+from workers.engine.model_manager import SPEAKERS, SUPPORTED_LANGUAGES
 
 logger = logging.getLogger(__name__)
 
 
 class QwenTTSEngine(BaseTTSEngine):
-    """TTS engine adapter for Qwen3-TTS CustomVoice model.
+    """TTS engine that proxies to an OpenAI-compatible HTTP server."""
 
-    Wraps generate_custom_voice to produce SynthesisResult objects.
-    Uses torch.inference_mode() for efficient GPU inference and
-    clears CUDA cache after each synthesis to prevent VRAM leaks.
-    """
-
-    def __init__(self, model: object) -> None:
-        """Initialize with a loaded Qwen3-TTS model instance.
+    def __init__(self, base_url: str, api_key: str = "dummy") -> None:
+        """Initialize with the TTS server base URL.
 
         Args:
-            model: A loaded Qwen3TTSModel instance.
+            base_url: Base URL of the OpenAI-compatible TTS server.
+            api_key: API key for authorization (servers may accept "dummy").
         """
-        self._model = model
+        self._base_url = base_url.rstrip("/")
+        self._api_key = api_key
+        self._client = httpx.Client(timeout=300.0)
 
     def synthesize(
         self,
@@ -43,7 +39,7 @@ class QwenTTSEngine(BaseTTSEngine):
         language: str,
         instruct: str = "",
     ) -> SynthesisResult:
-        """Synthesize speech using Qwen3-TTS.
+        """Synthesize speech via HTTP POST to the TTS server.
 
         Args:
             text: Text to convert to speech.
@@ -55,57 +51,56 @@ class QwenTTSEngine(BaseTTSEngine):
             SynthesisResult with audio samples at 24kHz.
 
         Raises:
-            ValueError: If speaker is not a valid speaker ID.
+            httpx.HTTPError: If the server returns an error.
+            ValueError: If speaker is invalid or response cannot be parsed.
         """
-        # Normalize speaker ID to lowercase
         speaker = speaker.lower().strip()
-        if speaker not in VALID_SPEAKER_IDS:
+        valid_ids = {s["id"] for s in SPEAKERS}
+        if speaker not in valid_ids:
             raise ValueError(
                 f"Invalid speaker '{speaker}'. "
-                f"Valid speakers: {sorted(VALID_SPEAKER_IDS)}"
+                f"Valid speakers: {sorted(valid_ids)}"
             )
 
-        # Normalize language to title case for Qwen3-TTS API
         language_normalized = (
             language.title() if language != "auto" else language
         )
 
+        payload = {
+            "model": "qwen3-tts",
+            "input": text,
+            "voice": speaker,
+            "instructions": instruct,
+            "response_format": "wav",
+            "language": language_normalized,
+        }
+
         logger.info(
-            "Synthesizing: text=%d chars, speaker=%s, lang=%s",
+            "TTS request: text=%d chars, speaker=%s, lang=%s",
             len(text),
             speaker,
             language_normalized,
         )
 
-        try:
-            with torch.inference_mode():
-                wavs, sample_rate = self._model.generate_custom_voice(
-                    text=text,
-                    language=language_normalized,
-                    speaker=speaker,
-                    instruct=instruct,
-                    do_sample=True,
-                    max_new_tokens=2048,
-                    temperature=0.9,
-                    top_k=50,
-                    top_p=1.0,
-                    repetition_penalty=1.05,
-                )
-        finally:
-            # Clean up GPU cache to prevent VRAM leaks
-            torch.cuda.empty_cache()
+        response = self._client.post(
+            f"{self._base_url}/v1/audio/speech",
+            json=payload,
+            headers={"Authorization": f"Bearer {self._api_key}"},
+        )
+        response.raise_for_status()
 
-        # wavs is a list of numpy arrays; take the first (mono) channel
-        audio = wavs[0] if isinstance(wavs, list) else wavs
-        if isinstance(audio, np.ndarray):
-            audio_array = audio
-        else:
-            audio_array = np.array(audio, dtype=np.float32)
+        # Parse WAV bytes into numpy array
+        audio_bytes = response.content
+        audio_buffer = io.BytesIO(audio_bytes)
+        audio_array, sample_rate = sf.read(audio_buffer, dtype="float32")
+
+        if audio_array.ndim > 1:
+            audio_array = audio_array[:, 0]  # mono
 
         duration = len(audio_array) / sample_rate
 
         logger.info(
-            "Synthesis complete: %.2fs audio at %dHz",
+            "TTS response: %.2fs audio at %dHz",
             duration,
             sample_rate,
         )
@@ -117,17 +112,9 @@ class QwenTTSEngine(BaseTTSEngine):
         )
 
     def get_speakers(self) -> list[dict]:
-        """Return the list of predefined Qwen3-TTS speakers.
-
-        Returns:
-            List of speaker dicts with id, name, language, gender, description.
-        """
+        """Return the list of predefined TTS speakers."""
         return SPEAKERS.copy()
 
     def get_supported_languages(self) -> list[str]:
-        """Return the list of supported language names.
-
-        Returns:
-            List of language strings including 'auto'.
-        """
+        """Return the list of supported language names."""
         return SUPPORTED_LANGUAGES.copy()

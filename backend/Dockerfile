@@ -1,8 +1,8 @@
 # ttsQwen Backend — FastAPI + Celery Worker
 #
-# Multi-stage build for Python backend with TTS engine support.
-# GPU inference requires NVIDIA Container Toolkit + host GPU.
-# For GPU-less dev, worker runs on CPU (slow but functional).
+# The worker proxies TTS requests to an external OpenAI-compatible server
+# instead of loading models locally. No GPU needed in this container.
+# The TTS server runs separately and handles its own GPU inference.
 
 # Stage 1: Builder — install Python dependencies
 FROM python:3.12-slim AS builder

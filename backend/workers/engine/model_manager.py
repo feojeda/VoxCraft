@@ -1,13 +1,8 @@
-"""Singleton model loader with GPU memory management.
+"""Singleton TTS engine factory.
 
-Manages the lifecycle of the Qwen3-TTS model: lazy loading on first
-access, CUDA kernel warmup, and GPU cache cleanup after each synthesis.
-
-Key design decisions:
-- Singleton pattern: one model instance per worker process
-- Lazy loading: model loaded on first get_engine() call, not at import time
-- Warmup: dummy inference at startup prevents 30s delay on first real request
-- Cleanup: torch.cuda.empty_cache() after each synthesis to prevent VRAM leaks
+Manages the lifecycle of the QwenTTSEngine HTTP client.
+The engine connects to an external OpenAI-compatible TTS server
+instead of loading a local model.
 """
 
 import logging
@@ -18,7 +13,6 @@ logger = logging.getLogger(__name__)
 
 
 # Predefined speaker catalog with metadata for the API.
-# These match the Qwen3-TTS built-in speakers.
 SPEAKERS = [
     {
         "id": "vivian",
@@ -85,10 +79,8 @@ SPEAKERS = [
     },
 ]
 
-# Valid speaker IDs for input validation.
 VALID_SPEAKER_IDS = {s["id"] for s in SPEAKERS}
 
-# Supported languages for the Qwen3-TTS model.
 SUPPORTED_LANGUAGES = [
     "auto",
     "chinese",
@@ -107,9 +99,9 @@ SUPPORTED_LANGUAGES = [
 def speed_to_instruct(speed: float) -> str:
     """Map a numeric speed value (0.5-2.0) to a natural language instruction.
 
-    Qwen3-TTS does not have a native speed parameter. Instead, speed
-    is controlled via the `instruct` parameter with natural language
-    instructions like "Speak faster" or "Speak slowly".
+    The external TTS server does not have a native speed parameter.
+    Speed is controlled via the `instructions` field with natural
+    language like "Speak faster" or "Speak slowly".
 
     Args:
         speed: Speed multiplier in range [0.5, 2.0].
@@ -132,78 +124,28 @@ def speed_to_instruct(speed: float) -> str:
 
 
 class ModelManager:
-    """Singleton model loader with lazy initialization.
-
-    Manages the Qwen3-TTS model lifecycle within a Celery worker process.
-    The model is loaded on first access and kept in GPU memory for
-    subsequent requests.
-    """
+    """Singleton TTS engine factory with lazy HTTP client initialization."""
 
     def __init__(self) -> None:
-        self._engine: "QwenTTSEngine | None" = None
-        self._model = None
-
-    def _load_model(self) -> None:
-        """Load the Qwen3-TTS model into GPU memory.
-
-        Uses bfloat16 precision and FlashAttention 2 for efficiency.
-        Requires torch and qwen_tts packages (available in Docker worker).
-        """
-        if self._model is not None:
-            return
-
-        import torch
-        from qwen_tts import Qwen3TTSModel
-
-        logger.info("Loading Qwen3-TTS model onto %s...", settings.GPU_DEVICE)
-
-        self._model = Qwen3TTSModel.from_pretrained(
-            "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
-            device_map=settings.GPU_DEVICE,
-            dtype=torch.bfloat16,
-            attn_implementation="flash_attention_2",
-        )
-        logger.info("Qwen3-TTS model loaded successfully")
-
-    def _warmup(self) -> None:
-        """Run a dummy inference to warm up CUDA kernels.
-
-        The first CUDA inference compiles kernels (10-30s delay).
-        Running warmup at startup prevents this delay on real requests.
-        """
-        if self._model is None:
-            return
-
-        import torch
-
-        logger.info("Running model warmup inference...")
-        try:
-            with torch.inference_mode():
-                self._model.generate_custom_voice(
-                    text="Warmup",
-                    language="English",
-                    speaker="ryan",
-                    instruct="",
-                    do_sample=True,
-                    max_new_tokens=64,
-                )
-            torch.cuda.empty_cache()
-            logger.info("Model warmup complete")
-        except Exception as e:
-            logger.warning("Model warmup failed (non-fatal): %s", e)
+        self._engine = None
 
     def get_engine(self) -> "QwenTTSEngine":
-        """Return a QwenTTSEngine, loading the model on first call.
+        """Return a QwenTTSEngine, creating it on first call.
 
         Returns:
-            QwenTTSEngine instance wrapping the loaded model.
+            QwenTTSEngine instance configured to call the external server.
         """
         if self._engine is None:
-            self._load_model()
-            self._warmup()
             from workers.engine.qwen import QwenTTSEngine
 
-            self._engine = QwenTTSEngine(self._model)
+            self._engine = QwenTTSEngine(
+                base_url=settings.TTS_SERVER_URL,
+                api_key=settings.TTS_SERVER_API_KEY,
+            )
+            logger.info(
+                "QwenTTSEngine initialized with server: %s",
+                settings.TTS_SERVER_URL,
+            )
         return self._engine
 
 

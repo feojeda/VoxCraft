@@ -31,7 +31,11 @@ class Settings(BaseSettings):
     # CORS
     CORS_ORIGINS: list[str] = ["http://localhost:3000"]
 
-    # GPU / Inference
+    # TTS Server (OpenAI-compatible HTTP API)
+    TTS_SERVER_URL: str = "http://192.168.4.35:8000"
+    TTS_SERVER_API_KEY: str = "dummy"
+
+    # GPU / Inference (legacy — only used if loading model locally)
     GPU_DEVICE: str = "cuda:0"
     WORKER_CONCURRENCY: int = 1
     TASK_SOFT_TIME_LIMIT: int = 300

@@ -130,7 +130,7 @@ def generate_speech(
         language: Language name or 'auto'.
         speed: Speed multiplier (0.5-2.0).
     """
-    # Import here to avoid circular imports and GPU-only deps at module level
+    # Import here to avoid circular imports at module level
     from app.services.audio_service import audio_service
     from app.services.job_manager import job_manager
 
@@ -193,7 +193,7 @@ def generate_speech(
         # Run the async function from synchronous Celery task context
         asyncio.run(_run())
     except ImportError as e:
-        # Handle missing GPU/ML libraries gracefully
+        # Handle missing dependencies gracefully
         logger.error("Job %s: import error — %s", job_id, e)
         asyncio.run(job_manager.fail_job(job_id, f"Server configuration error: {e}"))
     except Exception as e:

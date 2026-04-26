@@ -15,15 +15,11 @@ alembic>=1.13
 pydantic>=2.0
 pydantic-settings>=2.0
 
-# TTS engine
-qwen-tts>=0.1.1
+# TTS engine (HTTP client — model runs on external server)
+httpx>=0.28
 soundfile>=0.12
-
-# Flash attention (requires CUDA + --no-build-isolation)
-# flash-attn
 
 # Dev dependencies
 pytest
 pytest-asyncio
-httpx
 ruff
