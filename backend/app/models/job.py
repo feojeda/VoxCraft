@@ -38,6 +38,7 @@ class Job(Base):
 
     # Ownership and display
     user_id: Mapped[str | None] = mapped_column(String, nullable=True)
+    batch_id: Mapped[str | None] = mapped_column(String, nullable=True, index=True)
     voice_name: Mapped[str | None] = mapped_column(String, nullable=True)
 
     # Output
