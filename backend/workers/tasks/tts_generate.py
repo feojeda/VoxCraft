@@ -115,6 +115,8 @@ def generate_speech(
     instructions: str | None,
     ref_audio: str | None,
     ref_text: str | None,
+    emotion_preset: str | None = None,
+    pronunciation_enabled: bool = False,
 ) -> None:
     """Celery task: synthesize speech for a TTS job.
 
@@ -135,6 +137,8 @@ def generate_speech(
         instructions: Voice description for voice-design mode.
         ref_audio: Reference audio for voice-clone mode.
         ref_text: Transcript of reference audio.
+        emotion_preset: Emotion preset for prosody control.
+        pronunciation_enabled: Whether to apply pronunciation dictionary.
     """
     # Import here to avoid circular imports at module level
     from app.services.audio_service import audio_service
@@ -148,11 +152,41 @@ def generate_speech(
         model_manager = get_model_manager()
         engine = model_manager.get_engine()
 
-        # Step 3: Route to correct method based on mode
+        # Step 3: Build instruct from emotion preset and/or custom instruct
+        instruct_val = instruct or ""
+        if emotion_preset:
+            preset_instruct = engine.map_emotion_preset(emotion_preset)
+            if preset_instruct:
+                if instruct_val:
+                    instruct_val = f"{preset_instruct}. {instruct_val}"
+                else:
+                    instruct_val = preset_instruct
+        if not instruct_val:
+            instruct_val = speed_to_instruct(speed)
+
+        # Step 4: Apply pronunciation dictionary if enabled
+        synthesis_text = text
+        if pronunciation_enabled:
+            from app.core.database import async_session_factory
+            from app.services.pronunciation import (
+                apply_pronunciation_dict,
+                get_pronunciation_entries,
+            )
+
+            async with async_session_factory() as session:
+                entries = await get_pronunciation_entries(session)
+                if entries:
+                    synthesis_text = apply_pronunciation_dict(text, entries)
+                    logger.info(
+                        "Job %s: applied %d pronunciation entries",
+                        job_id,
+                        len(entries),
+                    )
+
+        # Step 5: Route to correct method based on mode
         if mode == "speech":
-            instruct_val = instruct or speed_to_instruct(speed)
             result = engine.synthesize(
-                text=text,
+                text=synthesis_text,
                 speaker=speaker or "ryan",
                 language=language,
                 instruct=instruct_val,
@@ -161,7 +195,7 @@ def generate_speech(
             if not instructions:
                 raise ValueError("instructions is required for voice-design mode")
             result = engine.synthesize_voice_design(
-                text=text,
+                text=synthesis_text,
                 instructions=instructions,
                 language=language,
             )
@@ -169,7 +203,7 @@ def generate_speech(
             if not ref_audio:
                 raise ValueError("ref_audio is required for voice-clone mode")
             result = engine.synthesize_voice_clone(
-                text=text,
+                text=synthesis_text,
                 ref_audio=ref_audio,
                 ref_text=ref_text,
                 language=language,
@@ -179,13 +213,13 @@ def generate_speech(
 
         await job_manager.update_job_status(job_id, "processing", progress=50)
 
-        # Step 4: Save WAV
+        # Step 6: Save WAV
         wav_path = audio_service.save_wav(result.audio, result.sample_rate, job_id)
 
-        # Step 5: Convert to MP3
+        # Step 7: Convert to MP3
         mp3_path = audio_service.convert_to_mp3(wav_path, job_id)
 
-        # Step 6: Mark as completed
+        # Step 8: Mark as completed
         await job_manager.complete_job(job_id, str(wav_path), str(mp3_path))
         logger.info("Job %s: completed successfully", job_id)
 

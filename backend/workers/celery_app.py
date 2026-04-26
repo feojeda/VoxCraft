@@ -29,6 +29,7 @@ celery_app.conf.update(
     worker_max_tasks_per_child=50,
     task_routes={
         "workers.tasks.tts_generate": {"queue": "tts"},
+        "workers.tasks.voice_clone": {"queue": "tts"},
     },
     visibility_timeout=720,
 )

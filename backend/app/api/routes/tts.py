@@ -6,14 +6,17 @@ GET /api/jobs/{job_id} — Poll job status and get audio URLs.
 
 import logging
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_db
 from app.models.job import Job
+from app.models.voice import ClonedVoice
 from app.schemas.tts import TTSJobResponse, TTSRequest, JobStatusResponse
 from app.services.job_manager import job_manager
 from workers.engine.model_manager import VALID_SPEAKER_IDS
 from workers.tasks.tts_generate import generate_speech
+from workers.tasks.voice_clone import generate_voice_clone
 
 logger = logging.getLogger(__name__)
 
@@ -21,20 +24,31 @@ router = APIRouter(tags=["tts"])
 
 
 @router.post("/generate", status_code=202, response_model=TTSJobResponse)
-async def create_tts_job(request: TTSRequest) -> TTSJobResponse:
+async def create_tts_job(
+    request: TTSRequest,
+    db: AsyncSession = Depends(get_db),
+) -> TTSJobResponse:
     """Create a new TTS generation job.
 
     Validates the request, creates a Job record in the database,
     dispatches a Celery task for async processing, and returns
     the job ID with 'queued' status.
 
-    Supports three modes:
+    Supports:
     - speech: Use predefined speakers
     - voice-design: Create a voice from text description
-    - voice-clone: Clone a voice from reference audio
+    - voice-clone: Clone from reference audio (legacy) or persisted cloned voice
     """
-    # Validate mode-specific requirements
-    if request.mode == "speech":
+    # Validate voice source
+    if request.cloned_voice_id:
+        # Verify cloned voice exists
+        voice = await db.get(ClonedVoice, request.cloned_voice_id)
+        if voice is None:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Cloned voice '{request.cloned_voice_id}' not found",
+            )
+    elif request.mode == "speech":
         if not request.speaker:
             raise HTTPException(status_code=400, detail="speaker is required for speech mode")
         if request.speaker.lower().strip() not in VALID_SPEAKER_IDS:
@@ -61,7 +75,7 @@ async def create_tts_job(request: TTSRequest) -> TTSJobResponse:
     # Create job record
     job = await job_manager.create_job(
         text=request.text,
-        mode=request.mode,
+        mode="voice_clone" if request.cloned_voice_id else request.mode,
         speaker=request.speaker.lower().strip() if request.speaker else None,
         language=request.language,
         speed=request.speed,
@@ -71,26 +85,41 @@ async def create_tts_job(request: TTSRequest) -> TTSJobResponse:
         ref_text=request.ref_text,
     )
 
-    # Dispatch Celery task
-    generate_speech.delay(
-        job_id=job.id,
-        text=request.text,
-        mode=request.mode,
-        speaker=request.speaker.lower().strip() if request.speaker else None,
-        language=request.language,
-        speed=request.speed,
-        instruct=request.instruct,
-        instructions=request.instructions,
-        ref_audio=request.ref_audio,
-        ref_text=request.ref_text,
-    )
-
-    logger.info(
-        "Dispatched TTS job %s: mode=%s, text=%d chars",
-        job.id,
-        request.mode,
-        len(request.text),
-    )
+    # Dispatch appropriate Celery task
+    if request.cloned_voice_id:
+        generate_voice_clone.delay(
+            job_id=job.id,
+            text=request.text,
+            voice_id=request.cloned_voice_id,
+            language=request.language,
+        )
+        logger.info(
+            "Dispatched voice clone job %s: voice_id=%s, text=%d chars",
+            job.id,
+            request.cloned_voice_id,
+            len(request.text),
+        )
+    else:
+        generate_speech.delay(
+            job_id=job.id,
+            text=request.text,
+            mode=request.mode,
+            speaker=request.speaker.lower().strip() if request.speaker else None,
+            language=request.language,
+            speed=request.speed,
+            instruct=request.instruct,
+            instructions=request.instructions,
+            ref_audio=request.ref_audio,
+            ref_text=request.ref_text,
+            emotion_preset=request.emotion_preset,
+            pronunciation_enabled=request.pronunciation_enabled,
+        )
+        logger.info(
+            "Dispatched TTS job %s: mode=%s, text=%d chars",
+            job.id,
+            request.mode,
+            len(request.text),
+        )
 
     return TTSJobResponse(job_id=job.id, status="queued")
 

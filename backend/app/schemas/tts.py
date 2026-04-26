@@ -24,12 +24,15 @@ class TTSRequest(BaseModel):
     text: str = Field(..., min_length=1, max_length=50000, description="Text to synthesize")
     mode: str = Field(default="speech", pattern="^(speech|voice-design|voice-clone)$", description="TTS mode")
     speaker: str | None = Field(default=None, description="Speaker name for speech mode (e.g., 'ryan', 'serena')")
+    cloned_voice_id: str | None = Field(default=None, description="Use persisted cloned voice instead of ref_audio")
     language: str = Field(default="auto", description="Language or 'auto'")
     speed: float = Field(default=1.0, ge=0.5, le=2.0, description="Speed multiplier 0.5-2.0")
     instruct: str | None = Field(default=None, description="Natural language instruction for style/emotion (speech mode)")
     instructions: str | None = Field(default=None, description="Voice description for voice-design mode")
     ref_audio: str | None = Field(default=None, description="Reference audio path/URL/base64 for voice-clone mode")
     ref_text: str | None = Field(default=None, description="Transcript of reference audio for voice-clone mode")
+    emotion_preset: str | None = Field(default=None, description="Emotion preset: happy, sad, angry, neutral, whisper")
+    pronunciation_enabled: bool = Field(default=False, description="Apply pronunciation dictionary overrides")
 
 
 class TTSJobResponse(BaseModel):
