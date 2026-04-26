@@ -66,7 +66,12 @@ Plans:
   2. User can view their generation history with text, voice used, date, and re-download past audio
   3. Text input area shows live character and word count as the user types
   4. User can save and load voice setting presets (speed + emotion combos) for reuse
-**Plans**: TBD
+**Plans**: 4 plans
+Plans:
+- [ ] 03-01-PLAN.md — Backend authentication foundation (User model, JWT auth, route protection, job ownership)
+- [ ] 03-02-PLAN.md — Frontend auth system & navigation (auth context, login/register pages, top nav, route protection middleware)
+- [ ] 03-03-PLAN.md — Generation history backend & frontend (history API, audio ownership, /history page with replay/download/delete)
+- [ ] 03-04-PLAN.md — Voice presets & account page (preset CRUD, preset controls on generation page, /account page)
 **UI hint**: yes
 
 ### Phase 4: Batch Processing & Sharing
