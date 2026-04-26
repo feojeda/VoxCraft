@@ -84,7 +84,7 @@ Plans:
   3. User can share any generated audio via a public link that others can open and listen to
 **Plans**: 5 plans
 Plans:
-- [ ] 04-01-PLAN.md — Backend models and schemas (BatchJob, ShareLink, batch_id on Job)
+- [x] 04-01-PLAN.md — Backend models and schemas (BatchJob, ShareLink, batch_id on Job)
 - [ ] 04-02-PLAN.md — Backend batch service and API (CSV parsing, job creation, ZIP generation, batch routes)
 - [ ] 04-03-PLAN.md — Backend share service and API (token generation, public audio, share routes)
 - [ ] 04-04-PLAN.md — Frontend batch UI (types, API client, upload component, batch list/detail pages)

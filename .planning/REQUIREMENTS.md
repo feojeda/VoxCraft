@@ -34,9 +34,9 @@ Requirements for initial release. Each maps to roadmap phases.
 - [ ] **OUT-02**: User can download audio as MP3
 - [ ] **OUT-03**: User can download audio as WAV
 - [ ] **OUT-04**: User can view generation history with text, voice used, date, and re-download
-- [ ] **OUT-05**: User can upload CSV/text file with multiple entries for batch processing
-- [ ] **OUT-06**: User can download batch results as a ZIP file
-- [ ] **OUT-07**: User can share generated audio via a public link
+- [x] **OUT-05**: User can upload CSV/text file with multiple entries for batch processing
+- [x] **OUT-06**: User can download batch results as a ZIP file
+- [x] **OUT-07**: User can share generated audio via a public link
 - [ ] **OUT-08**: User can save and load voice setting presets (speed + emotion combos)
 
 ### User Management
@@ -105,9 +105,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | USER-04 | Phase 3 | Pending |
 | OUT-04 | Phase 3 | Pending |
 | OUT-08 | Phase 3 | Pending |
-| OUT-05 | Phase 4 | Pending |
-| OUT-06 | Phase 4 | Pending |
-| OUT-07 | Phase 4 | Pending |
+| OUT-05 | Phase 4 | Complete |
+| OUT-06 | Phase 4 | Complete |
+| OUT-07 | Phase 4 | Complete |
 
 **Coverage:**
 - v1 requirements: 24 total
