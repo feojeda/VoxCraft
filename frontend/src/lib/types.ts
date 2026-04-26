@@ -1,11 +1,19 @@
 // Shared TypeScript types matching backend Pydantic schemas
 
+// TTS mode
+type TTSMode = "speech" | "voice-design" | "voice-clone";
+
 // Request types
 export interface TTSRequest {
   text: string; // 1-50000 chars
-  speaker: string; // e.g. "ryan", "serena"
+  mode: TTSMode; // speech | voice-design | voice-clone
+  speaker?: string; // for speech mode, e.g. "ryan", "serena"
   language?: string; // default "auto"
   speed?: number; // 0.5 - 2.0, default 1.0
+  instruct?: string; // for speech mode
+  instructions?: string; // for voice-design mode
+  ref_audio?: string; // for voice-clone mode
+  ref_text?: string; // for voice-clone mode
 }
 
 // Response types
@@ -23,8 +31,10 @@ export interface JobStatusResponse {
   audio_wav_url: string | null;
   audio_mp3_url: string | null;
   error_message: string | null;
-  speaker: string;
+  mode: TTSMode;
+  speaker: string | null;
   speed: number;
+  instructions: string | null;
   created_at: string;
 }
 

@@ -27,29 +27,41 @@ class JobManager:
     async def create_job(
         self,
         text: str,
-        speaker: str,
+        mode: str = "speech",
+        speaker: str | None = None,
         language: str = "auto",
         speed: float = 1.0,
         instruct: str | None = None,
+        instructions: str | None = None,
+        ref_audio: str | None = None,
+        ref_text: str | None = None,
     ) -> Job:
         """Create a new TTS generation job in queued status.
 
         Args:
             text: Text to synthesize.
-            speaker: Speaker identifier.
+            mode: TTS mode — speech, voice-design, or voice-clone.
+            speaker: Speaker identifier (for speech mode).
             language: Language name or 'auto'.
             speed: Speed multiplier (0.5-2.0).
-            instruct: Optional style instruction.
+            instruct: Optional style instruction (speech mode).
+            instructions: Voice description (voice-design mode).
+            ref_audio: Reference audio path/URL/base64 (voice-clone mode).
+            ref_text: Transcript of reference audio (voice-clone mode).
 
         Returns:
             The created Job instance with generated ID.
         """
         job = Job(
             text=text,
+            mode=mode,
             speaker=speaker,
             language=language,
             speed=speed,
             instruct=instruct,
+            instructions=instructions,
+            ref_audio=ref_audio,
+            ref_text=ref_text,
             status="queued",
             progress=0,
         )
@@ -57,7 +69,7 @@ class JobManager:
             session.add(job)
             await session.commit()
             await session.refresh(job)
-        logger.info("Created job %s: speaker=%s, text=%d chars", job.id, speaker, len(text))
+        logger.info("Created job %s: mode=%s, text=%d chars", job.id, mode, len(text))
         return job
 
     async def get_job(self, job_id: str) -> Job | None:

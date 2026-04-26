@@ -1,8 +1,7 @@
 """Celery task for TTS speech generation.
 
-Processes TTS jobs: loads the engine via ModelManager, splits long text
-into chunks, synthesizes each chunk, concatenates audio, saves WAV/MP3,
-and updates job status throughout the lifecycle.
+Processes TTS jobs: routes to the correct engine method based on mode,
+synthesizes audio, saves WAV/MP3, and updates job status.
 """
 
 import asyncio
@@ -108,27 +107,34 @@ def generate_speech(
     self,
     job_id: str,
     text: str,
-    speaker: str,
+    mode: str,
+    speaker: str | None,
     language: str,
     speed: float,
+    instruct: str | None,
+    instructions: str | None,
+    ref_audio: str | None,
+    ref_text: str | None,
 ) -> None:
     """Celery task: synthesize speech for a TTS job.
 
-    Processes the job through the full pipeline:
-    1. Update status to processing
-    2. Split long text into chunks
-    3. Synthesize each chunk via QwenTTSEngine
-    4. Concatenate audio segments
-    5. Save WAV and convert to MP3
-    6. Mark job as completed (or failed on error)
+    Routes to the correct synthesis method based on mode:
+    - speech: predefined speaker
+    - voice-design: create voice from description
+    - voice-clone: clone from reference audio
 
     Args:
         self: Bound Celery task instance (for progress updates).
         job_id: The job's unique identifier.
         text: Text to synthesize.
-        speaker: Speaker ID (e.g., 'ryan').
+        mode: TTS mode — speech, voice-design, or voice-clone.
+        speaker: Speaker ID for speech mode.
         language: Language name or 'auto'.
         speed: Speed multiplier (0.5-2.0).
+        instruct: Style instruction for speech mode.
+        instructions: Voice description for voice-design mode.
+        ref_audio: Reference audio for voice-clone mode.
+        ref_text: Transcript of reference audio.
     """
     # Import here to avoid circular imports at module level
     from app.services.audio_service import audio_service
@@ -138,54 +144,48 @@ def generate_speech(
         # Step 1: Mark as processing
         await job_manager.update_job_status(job_id, "processing", progress=0)
 
-        # Step 2: Get engine and compute instruct from speed
+        # Step 2: Get engine
         model_manager = get_model_manager()
         engine = model_manager.get_engine()
-        instruct = speed_to_instruct(speed)
 
-        # Step 3: Split text into chunks
-        chunks = split_text(text, max_chars=400)
-        logger.info(
-            "Job %s: processing %d chunks for %d chars",
-            job_id,
-            len(chunks),
-            len(text),
-        )
-
-        # Step 4: Synthesize each chunk
-        audio_segments: list["np.ndarray"] = []
-        total_chunks = len(chunks)
-
-        for i, chunk in enumerate(chunks):
-            logger.info("Job %s: synthesizing chunk %d/%d", job_id, i + 1, total_chunks)
-
+        # Step 3: Route to correct method based on mode
+        if mode == "speech":
+            instruct_val = instruct or speed_to_instruct(speed)
             result = engine.synthesize(
-                text=chunk,
-                speaker=speaker,
+                text=text,
+                speaker=speaker or "ryan",
                 language=language,
-                instruct=instruct,
+                instruct=instruct_val,
             )
-            audio_segments.append(result.audio)
+        elif mode == "voice-design":
+            if not instructions:
+                raise ValueError("instructions is required for voice-design mode")
+            result = engine.synthesize_voice_design(
+                text=text,
+                instructions=instructions,
+                language=language,
+            )
+        elif mode == "voice-clone":
+            if not ref_audio:
+                raise ValueError("ref_audio is required for voice-clone mode")
+            result = engine.synthesize_voice_clone(
+                text=text,
+                ref_audio=ref_audio,
+                ref_text=ref_text,
+                language=language,
+            )
+        else:
+            raise ValueError(f"Unknown mode: {mode}")
 
-            # Update progress: 10% for setup, 80% for synthesis, 10% for saving
-            progress = int(10 + (i + 1) / total_chunks * 80)
-            await job_manager.update_job_status(job_id, "processing", progress=progress)
+        await job_manager.update_job_status(job_id, "processing", progress=50)
 
-        # Step 5: Concatenate audio segments
-        if not audio_segments:
-            raise ValueError("No audio segments produced")
+        # Step 4: Save WAV
+        wav_path = audio_service.save_wav(result.audio, result.sample_rate, job_id)
 
-        import numpy as np
-
-        final_audio = np.concatenate(audio_segments)
-
-        # Step 6: Save WAV
-        wav_path = audio_service.save_wav(final_audio, result.sample_rate, job_id)
-
-        # Step 7: Convert to MP3
+        # Step 5: Convert to MP3
         mp3_path = audio_service.convert_to_mp3(wav_path, job_id)
 
-        # Step 8: Mark as completed
+        # Step 6: Mark as completed
         await job_manager.complete_job(job_id, str(wav_path), str(mp3_path))
         logger.info("Job %s: completed successfully", job_id)
 

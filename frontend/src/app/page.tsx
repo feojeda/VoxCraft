@@ -11,12 +11,20 @@ import { ErrorMessage } from "@/components/error-message";
 import { AudioPlayer } from "@/components/audio-player";
 import { DownloadButtons } from "@/components/download-buttons";
 import { EmptyState } from "@/components/empty-state";
+import { ModeSelector } from "@/components/mode-selector";
+import { VoiceDesignInput } from "@/components/voice-design-input";
+import { VoiceCloneInput } from "@/components/voice-clone-input";
 import { useTTSGeneration } from "@/hooks/use-tts-generation";
+import type { TTSMode } from "@/lib/types";
 
 export default function Home() {
   const [text, setText] = useState("");
+  const [mode, setMode] = useState<TTSMode>("speech");
   const [selectedSpeaker, setSelectedSpeaker] = useState<string | null>(null);
   const [speed, setSpeed] = useState(1.0);
+  const [instructions, setInstructions] = useState("");
+  const [refAudio, setRefAudio] = useState<string | null>(null);
+  const [refText, setRefText] = useState("");
   const [textError, setTextError] = useState<string | undefined>(undefined);
 
   const {
@@ -26,7 +34,15 @@ export default function Home() {
     audioUrls,
     error: generationError,
     isGenerating,
-  } = useTTSGeneration({ text, speaker: selectedSpeaker, speed });
+  } = useTTSGeneration({
+    text,
+    mode,
+    speaker: selectedSpeaker,
+    speed,
+    instructions,
+    refAudio,
+    refText,
+  });
 
   const handleTextChange = (newText: string) => {
     setText(newText);
@@ -58,6 +74,15 @@ export default function Home() {
             ? ("failed" as const)
             : null;
 
+  // Determine if generate button should be disabled based on mode
+  const isGenerateDisabled = () => {
+    if (!text.trim()) return true;
+    if (mode === "speech" && !selectedSpeaker) return true;
+    if (mode === "voice-design" && !instructions.trim()) return true;
+    if (mode === "voice-clone" && !refAudio) return true;
+    return false;
+  };
+
   return (
     <main className="min-h-screen px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-3xl">
@@ -87,30 +112,59 @@ export default function Home() {
             />
           </section>
 
-          {/* Voice & Settings Section */}
+          {/* Mode & Voice Section */}
           <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 sm:p-6">
             <h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-[var(--text-secondary)]">
-              Voice & Settings
+              Mode & Voice
             </h2>
 
-            {/* Voice picker */}
+            {/* Mode selector */}
             <div className="mb-4">
-              <VoicePicker
-                selectedSpeaker={selectedSpeaker}
-                onSelect={setSelectedSpeaker}
-              />
+              <ModeSelector mode={mode} onChange={setMode} />
             </div>
 
-            {/* Speed slider */}
-            <div className="mb-4">
-              <SpeedSlider value={speed} onChange={setSpeed} />
-            </div>
+            {/* Mode-specific inputs */}
+            {mode === "speech" && (
+              <div className="mb-4">
+                <VoicePicker
+                  selectedSpeaker={selectedSpeaker}
+                  onSelect={setSelectedSpeaker}
+                />
+              </div>
+            )}
+
+            {mode === "voice-design" && (
+              <div className="mb-4">
+                <VoiceDesignInput
+                  instructions={instructions}
+                  onChange={setInstructions}
+                />
+              </div>
+            )}
+
+            {mode === "voice-clone" && (
+              <div className="mb-4">
+                <VoiceCloneInput
+                  refAudio={refAudio}
+                  refText={refText}
+                  onRefAudioChange={setRefAudio}
+                  onRefTextChange={setRefText}
+                />
+              </div>
+            )}
+
+            {/* Speed slider (only for speech mode) */}
+            {mode === "speech" && (
+              <div className="mb-4">
+                <SpeedSlider value={speed} onChange={setSpeed} />
+              </div>
+            )}
 
             {/* Generate button */}
             <GenerateButton
               onClick={handleGenerate}
               isGenerating={isGenerating}
-              disabled={!text.trim() || !selectedSpeaker}
+              disabled={isGenerateDisabled()}
             />
 
             {/* Progress bar */}

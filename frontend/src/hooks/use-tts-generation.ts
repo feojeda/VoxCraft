@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import type { JobStatus, JobStatusResponse } from "@/lib/types";
+import type { JobStatus, JobStatusResponse, TTSMode, TTSRequest } from "@/lib/types";
 
 interface UseTTSGenerationReturn {
   generate: () => void;
@@ -16,16 +16,24 @@ interface UseTTSGenerationReturn {
 
 interface UseTTSGenerationOptions {
   text: string;
+  mode: TTSMode;
   speaker: string | null;
   speed: number;
+  instructions: string;
+  refAudio: string | null;
+  refText: string;
 }
 
 const POLL_INTERVAL = 2000; // 2 seconds
 
 export function useTTSGeneration({
   text,
+  mode,
   speaker,
   speed,
+  instructions,
+  refAudio,
+  refText,
 }: UseTTSGenerationOptions): UseTTSGenerationReturn {
   const queryClient = useQueryClient();
   const [jobId, setJobId] = useState<string | null>(null);
@@ -83,14 +91,30 @@ export function useTTSGeneration({
     }
   }
 
+  // Build request based on mode
+  const buildRequest = useCallback((): TTSRequest => {
+    const base: TTSRequest = {
+      text,
+      mode,
+      language: "auto",
+      speed,
+    };
+
+    if (mode === "speech") {
+      base.speaker = speaker!;
+    } else if (mode === "voice-design") {
+      base.instructions = instructions;
+    } else if (mode === "voice-clone") {
+      base.ref_audio = refAudio || undefined;
+      base.ref_text = refText || undefined;
+    }
+
+    return base;
+  }, [text, mode, speaker, speed, instructions, refAudio, refText]);
+
   // Create job mutation
   const createJobMutation = useMutation({
-    mutationFn: () =>
-      apiClient.createTTSJob({
-        text,
-        speaker: speaker!,
-        speed,
-      }),
+    mutationFn: () => apiClient.createTTSJob(buildRequest()),
     onSuccess: (data) => {
       setJobId(data.job_id);
       setStatus("creating");
@@ -110,8 +134,18 @@ export function useTTSGeneration({
       setError("Please enter some text");
       return;
     }
-    if (!speaker) {
+
+    // Mode-specific validation
+    if (mode === "speech" && !speaker) {
       setError("Please select a voice");
+      return;
+    }
+    if (mode === "voice-design" && !instructions.trim()) {
+      setError("Please describe the voice you want to create");
+      return;
+    }
+    if (mode === "voice-clone" && !refAudio) {
+      setError("Please upload a reference audio file");
       return;
     }
 
@@ -129,7 +163,7 @@ export function useTTSGeneration({
     queryClient.removeQueries({ queryKey: ["job-status"] });
 
     createJobMutation.mutate();
-  }, [text, speaker, speed, createJobMutation, queryClient]);
+  }, [text, mode, speaker, instructions, refAudio, refText, createJobMutation, queryClient]);
 
   const isGenerating =
     status === "creating" || status === "polling";

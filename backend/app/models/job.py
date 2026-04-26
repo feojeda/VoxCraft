@@ -27,10 +27,14 @@ class Job(Base):
 
     # Input parameters
     text: Mapped[str] = mapped_column(Text)
+    mode: Mapped[str] = mapped_column(String, default="speech")  # speech|voice-design|voice-clone
     language: Mapped[str] = mapped_column(String, default="auto")
-    speaker: Mapped[str] = mapped_column(String)
+    speaker: Mapped[str | None] = mapped_column(String, nullable=True)
     speed: Mapped[float] = mapped_column(Float, default=1.0)
     instruct: Mapped[str | None] = mapped_column(String, nullable=True)
+    instructions: Mapped[str | None] = mapped_column(Text, nullable=True)
+    ref_audio: Mapped[str | None] = mapped_column(Text, nullable=True)
+    ref_text: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Output
     audio_wav_path: Mapped[str | None] = mapped_column(String, nullable=True)

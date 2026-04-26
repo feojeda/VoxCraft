@@ -1,8 +1,10 @@
 """Qwen3-TTS engine adapter (HTTP client).
 
-Calls the OpenAI-compatible TTS server via HTTP instead of loading
-the model locally. Expects a server running at TTS_SERVER_URL with
-/v1/audio/speech endpoint.
+Calls the OpenAI-compatible TTS server via HTTP.
+Supports three modes:
+- speech: /v1/audio/speech (predefined speakers)
+- voice-design: /v1/audio/voice-design (create voice from description)
+- voice-clone: /v1/audio/voice-clone (clone from reference audio)
 """
 
 import io
@@ -32,58 +34,28 @@ class QwenTTSEngine(BaseTTSEngine):
         self._api_key = api_key
         self._client = httpx.Client(timeout=300.0)
 
-    def synthesize(
+    def _call_endpoint(
         self,
-        text: str,
-        speaker: str,
-        language: str,
-        instruct: str = "",
+        endpoint: str,
+        payload: dict,
     ) -> SynthesisResult:
-        """Synthesize speech via HTTP POST to the TTS server.
+        """POST to a TTS endpoint and parse the WAV response.
 
         Args:
-            text: Text to convert to speech.
-            speaker: Speaker ID (e.g., 'ryan', 'serena').
-            language: Language name or 'auto'.
-            instruct: Natural language instruction for style control.
+            endpoint: API path (e.g., /v1/audio/speech).
+            payload: JSON body.
 
         Returns:
-            SynthesisResult with audio samples at 24kHz.
-
-        Raises:
-            httpx.HTTPError: If the server returns an error.
-            ValueError: If speaker is invalid or response cannot be parsed.
+            SynthesisResult with parsed audio.
         """
-        speaker = speaker.lower().strip()
-        valid_ids = {s["id"] for s in SPEAKERS}
-        if speaker not in valid_ids:
-            raise ValueError(
-                f"Invalid speaker '{speaker}'. "
-                f"Valid speakers: {sorted(valid_ids)}"
-            )
-
-        language_normalized = (
-            language.title() if language != "auto" else language
-        )
-
-        payload = {
-            "model": "qwen3-tts",
-            "input": text,
-            "voice": speaker,
-            "instructions": instruct,
-            "response_format": "wav",
-            "language": language_normalized,
-        }
-
         logger.info(
-            "TTS request: text=%d chars, speaker=%s, lang=%s",
-            len(text),
-            speaker,
-            language_normalized,
+            "TTS request: endpoint=%s, text=%d chars",
+            endpoint,
+            len(payload.get("input", "")),
         )
 
         response = self._client.post(
-            f"{self._base_url}/v1/audio/speech",
+            f"{self._base_url}{endpoint}",
             json=payload,
             headers={"Authorization": f"Bearer {self._api_key}"},
         )
@@ -110,6 +82,112 @@ class QwenTTSEngine(BaseTTSEngine):
             sample_rate=sample_rate,
             duration_seconds=duration,
         )
+
+    def synthesize(
+        self,
+        text: str,
+        speaker: str,
+        language: str,
+        instruct: str = "",
+    ) -> SynthesisResult:
+        """Synthesize speech using a predefined speaker.
+
+        Args:
+            text: Text to convert to speech.
+            speaker: Speaker ID (e.g., 'ryan', 'serena').
+            language: Language name or 'auto'.
+            instruct: Natural language instruction for style control.
+
+        Returns:
+            SynthesisResult with audio samples at 24kHz.
+        """
+        speaker = speaker.lower().strip()
+        valid_ids = {s["id"] for s in SPEAKERS}
+        if speaker not in valid_ids:
+            raise ValueError(
+                f"Invalid speaker '{speaker}'. "
+                f"Valid speakers: {sorted(valid_ids)}"
+            )
+
+        language_normalized = (
+            language.title() if language != "auto" else language
+        )
+
+        payload = {
+            "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+            "input": text,
+            "voice": speaker,
+            "instructions": instruct,
+            "response_format": "wav",
+            "language": language_normalized,
+        }
+
+        return self._call_endpoint("/v1/audio/speech", payload)
+
+    def synthesize_voice_design(
+        self,
+        text: str,
+        instructions: str,
+        language: str,
+    ) -> SynthesisResult:
+        """Create a custom voice from text description.
+
+        Args:
+            text: Text to convert to speech.
+            instructions: Natural language description of the desired voice.
+            language: Language name or 'auto'.
+
+        Returns:
+            SynthesisResult with audio samples.
+        """
+        language_normalized = (
+            language.title() if language != "auto" else language
+        )
+
+        payload = {
+            "model": "Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign",
+            "input": text,
+            "instructions": instructions,
+            "response_format": "wav",
+            "language": language_normalized,
+        }
+
+        return self._call_endpoint("/v1/audio/voice-design", payload)
+
+    def synthesize_voice_clone(
+        self,
+        text: str,
+        ref_audio: str,
+        ref_text: str | None,
+        language: str,
+    ) -> SynthesisResult:
+        """Clone a voice from reference audio.
+
+        Args:
+            text: Text to convert to speech.
+            ref_audio: Reference audio file path, URL, or base64 string.
+            ref_text: Transcript of the reference audio (optional).
+            language: Language name or 'auto'.
+
+        Returns:
+            SynthesisResult with audio samples.
+        """
+        language_normalized = (
+            language.title() if language != "auto" else language
+        )
+
+        payload = {
+            "model": "Qwen/Qwen3-TTS-12Hz-1.7B-Base",
+            "input": text,
+            "ref_audio": ref_audio,
+            "response_format": "wav",
+            "language": language_normalized,
+        }
+
+        if ref_text:
+            payload["ref_text"] = ref_text
+
+        return self._call_endpoint("/v1/audio/voice-clone", payload)
 
     def get_speakers(self) -> list[dict]:
         """Return the list of predefined TTS speakers."""
