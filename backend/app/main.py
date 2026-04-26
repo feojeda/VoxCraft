@@ -13,6 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes.audio import router as audio_router
 from app.api.routes.auth import router as auth_router
+from app.api.routes.batch import router as batch_router
 from app.api.routes.health import router as health_router
 from app.api.routes.history import router as history_router
 from app.api.routes.presets import router as presets_router
@@ -56,4 +57,5 @@ app.include_router(voices_router, prefix="/api")
 app.include_router(pronunciation_router, prefix="/api")
 app.include_router(history_router, prefix="/api")
 app.include_router(presets_router, prefix="/api")
+app.include_router(batch_router, prefix="/api")
 app.include_router(audio_router, prefix="/api")
