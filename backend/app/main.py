@@ -18,6 +18,7 @@ from app.api.routes.health import router as health_router
 from app.api.routes.history import router as history_router
 from app.api.routes.presets import router as presets_router
 from app.api.routes.pronunciation import router as pronunciation_router
+from app.api.routes.share import router as share_router
 from app.api.routes.tts import router as tts_router
 from app.api.routes.voices import router as voices_router
 from app.config import settings
@@ -58,4 +59,5 @@ app.include_router(pronunciation_router, prefix="/api")
 app.include_router(history_router, prefix="/api")
 app.include_router(presets_router, prefix="/api")
 app.include_router(batch_router, prefix="/api")
+app.include_router(share_router, prefix="/api")
 app.include_router(audio_router, prefix="/api")
