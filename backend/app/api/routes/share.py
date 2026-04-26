@@ -6,7 +6,7 @@ as well as public share metadata retrieval without authentication.
 
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_db
@@ -60,8 +60,8 @@ async def create_share_link(
 
 @router.get("/shares", response_model=ShareListResponse)
 async def list_share_links(
-    skip: int = 0,
-    limit: int = 50,
+    skip: int = Query(0, ge=0),
+    limit: int = Query(50, ge=1, le=200),
     current_user: User = Depends(get_current_user),
 ) -> ShareListResponse:
     """List the current user's active share links."""
