@@ -82,7 +82,13 @@ Plans:
   1. User can upload a CSV/text file with multiple entries and have them all processed into audio
   2. User can download all batch results as a single ZIP file
   3. User can share any generated audio via a public link that others can open and listen to
-**Plans**: TBD
+**Plans**: 5 plans
+Plans:
+- [ ] 04-01-PLAN.md — Backend models and schemas (BatchJob, ShareLink, batch_id on Job)
+- [ ] 04-02-PLAN.md — Backend batch service and API (CSV parsing, job creation, ZIP generation, batch routes)
+- [ ] 04-03-PLAN.md — Backend share service and API (token generation, public audio, share routes)
+- [ ] 04-04-PLAN.md — Frontend batch UI (types, API client, upload component, batch list/detail pages)
+- [ ] 04-05-PLAN.md — Frontend sharing and integration (share button, public page, account nav history updates)
 **UI hint**: yes
 
 ## Progress
@@ -95,4 +101,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | 1. Core TTS Pipeline | 5/5 | Complete | 2026-04-25 |
 | 2. Voice Cloning & Expressive Control | 5/5 | Complete | 2026-04-25 |
 | 3. User Accounts & Complete Frontend | 4/4 | Complete | 2026-04-26 |
-| 4. Batch Processing & Sharing | 0/? | Not started | - |
+| 4. Batch Processing & Sharing | 0/5 | Planned | - |
