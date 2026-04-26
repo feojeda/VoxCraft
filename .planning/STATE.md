@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 04-03-PLAN.md
-last_updated: "2026-04-26T07:26:50.882Z"
+stopped_at: Completed 04-04-PLAN.md
+last_updated: "2026-04-26T07:33:09.009Z"
 last_activity: 2026-04-26
 progress:
   total_phases: 4
   completed_phases: 3
   total_plans: 19
-  completed_plans: 17
-  percent: 89
+  completed_plans: 18
+  percent: 95
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2025-04-25)
 ## Current Position
 
 Phase: 04 (batch-processing-sharing) — EXECUTING
-Plan: 4 of 5
+Plan: 5 of 5
 Status: Ready to execute
 Last activity: 2026-04-26
 
@@ -57,6 +57,7 @@ Progress: [██████████░░] 75%
 | Phase 04-batch-processing-sharing P01 | 147 | 2 tasks | 7 files |
 | Phase 04-batch-processing-sharing P02 | 5min | 3 tasks | 3 files |
 | Phase 04-batch-processing-sharing P03 | 2min | 3 tasks | 4 files |
+| Phase 04-batch-processing-sharing P04 | 5min | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -75,6 +76,8 @@ Recent decisions affecting current work:
 - Frontend auth: React Context for auth state, middleware for route protection, cookie-based sessions
 - [Phase 04-batch-processing-sharing]: Failed jobs for invalid CSV rows: invalid rows create immediately-failed Job records so they appear in batch results, satisfying the must-have that every CSV row creates a Job
 - [Phase 04-batch-processing-sharing]: Dual Celery task dispatch for batch: predefined speakers use generate_speech, cloned voices use generate_voice_clone, matching the existing tts.py logic
+- [Phase 04]: Added blob response handling to request() helper for ZIP downloads — auto-fix for broken binary download
+- [Phase 04]: Kept ProgressBar as local component in batch detail rather than reusing existing progress-bar.tsx because existing component is job-status-specific
 
 ### Pending Todos
 
@@ -95,6 +98,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-04-26T07:26:50.879Z
-Stopped at: Completed 04-03-PLAN.md
+Last session: 2026-04-26T07:33:09.006Z
+Stopped at: Completed 04-04-PLAN.md
 Resume file: None
