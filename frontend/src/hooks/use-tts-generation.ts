@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import type { JobStatus, JobStatusResponse, TTSMode, TTSRequest } from "@/lib/types";
+import type { JobStatusResponse, TTSMode, TTSRequest } from "@/lib/types";
 
 interface UseTTSGenerationReturn {
   generate: () => void;
@@ -71,8 +71,10 @@ export function useTTSGeneration({
     refetchOnWindowFocus: false,
   });
 
-  // Process polling results
-  if (jobStatus) {
+  // Process polling results in an effect to avoid setState during render
+  useEffect(() => {
+    if (!jobStatus) return;
+
     const currentGeneration = generationRef.current;
 
     if (jobStatus.status === "completed" && status !== "completed") {
@@ -97,7 +99,7 @@ export function useTTSGeneration({
         setStatus("polling");
       }
     }
-  }
+  }, [jobStatus, status]);
 
   // Build request based on mode
   const buildRequest = useCallback((): TTSRequest => {
@@ -158,7 +160,11 @@ export function useTTSGeneration({
       return;
     }
     if (mode === "voice-clone" && !refAudio && !clonedVoiceId) {
-      setError("Please upload a reference audio file or select a cloned voice");
+      setError("Please upload or record a reference audio");
+      return;
+    }
+    if (mode === "voice-clone" && !refText.trim()) {
+      setError("Please enter the reference transcript");
       return;
     }
 

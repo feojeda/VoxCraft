@@ -11,12 +11,15 @@ Also provides:
 - GET /api/voices/predefined — List predefined speakers (legacy endpoint)
 """
 
+import base64
 import logging
 import os
 import shutil
+import subprocess
 from pathlib import Path
 from uuid import uuid4
 
+import httpx
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -95,6 +98,38 @@ async def create_voice(
     finally:
         await audio.close()
 
+    # Convert webm to wav if needed (browser recordings produce webm)
+    if ext == ".webm":
+        wav_path = voice_dir / "reference.wav"
+        try:
+            subprocess.run(
+                [
+                    "ffmpeg",
+                    "-y",
+                    "-i",
+                    str(file_path),
+                    "-ar",
+                    "24000",
+                    "-ac",
+                    "1",
+                    "-acodec",
+                    "pcm_s16le",
+                    str(wav_path),
+                ],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                check=True,
+            )
+            # Remove original webm, use wav for validation and storage
+            os.remove(file_path)
+            file_path = wav_path
+        except subprocess.CalledProcessError:
+            shutil.rmtree(voice_dir, ignore_errors=True)
+            raise HTTPException(
+                status_code=400,
+                detail="Unable to convert audio file. Please upload a valid WAV or MP3 file.",
+            ) from None
+
     # Validate audio
     try:
         validation = validate_audio_file(str(file_path))
@@ -102,6 +137,31 @@ async def create_voice(
         # Clean up saved file on validation failure
         shutil.rmtree(voice_dir, ignore_errors=True)
         raise HTTPException(status_code=400, detail=str(e)) from e
+
+    # Create voice clone prompt via TTS server
+    voice_clone_prompt_b64 = None
+    try:
+        with open(file_path, "rb") as f:
+            audio_bytes = f.read()
+        audio_b64 = base64.b64encode(audio_bytes).decode("utf-8")
+        audio_data_uri = f"data:audio/wav;base64,{audio_b64}"
+
+        tts_response = httpx.post(
+            f"{settings.TTS_SERVER_URL}/v1/audio/voice-clone/prompt",
+            json={
+                "ref_audio": audio_data_uri,
+                "ref_text": ref_text,
+                "x_vector_only_mode": False,
+            },
+            timeout=300.0,
+        )
+        tts_response.raise_for_status()
+        prompt_data = tts_response.json()
+        voice_clone_prompt_b64 = prompt_data.get("voice_clone_prompt_b64")
+        logger.info("Created voice clone prompt for voice %s", voice_id)
+    except Exception as e:
+        logger.warning("Failed to create voice clone prompt for voice %s: %s", voice_id, e)
+        # Continue without prompt — fallback to sending audio on generation
 
     # Create database record
     voice = ClonedVoice(
@@ -111,6 +171,7 @@ async def create_voice(
         ref_text=ref_text,
         duration_seconds=validation["duration"],
         sample_rate=validation["sample_rate"],
+        voice_clone_prompt_b64=voice_clone_prompt_b64,
         user_id=current_user.id,
     )
     db.add(voice)

@@ -63,8 +63,8 @@ class JobStatusResponse(BaseModel):
     instructions: str | None
     ref_audio: str | None
     ref_text: str | None
-    audio_wav_path: str | None
-    audio_mp3_path: str | None
+    audio_wav_url: str | None
+    audio_mp3_url: str | None
     error_message: str | None
     created_at: datetime | None
     completed_at: datetime | None

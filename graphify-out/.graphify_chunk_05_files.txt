@@ -1,0 +1,8 @@
+frontend/src/app/account/page.tsx
+frontend/src/app/batches/page.tsx
+frontend/src/app/batches/[batchId]/page.tsx
+frontend/src/app/login/page.tsx
+frontend/src/hooks/use-tts-generation.ts
+backend/alembic/env.py
+backend/alembic/versions/002_add_cloned_voices_and_pronunciation.py
+backend/requirements.txt

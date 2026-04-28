@@ -7,8 +7,12 @@ Supports three modes:
 - voice-clone: /v1/audio/voice-clone (clone from reference audio)
 """
 
+import base64
 import io
 import logging
+import os
+import subprocess
+import tempfile
 
 import httpx
 import numpy as np
@@ -18,6 +22,69 @@ from workers.engine.base import BaseTTSEngine, SynthesisResult
 from workers.engine.model_manager import SPEAKERS, SUPPORTED_LANGUAGES
 
 logger = logging.getLogger(__name__)
+
+
+def _convert_audio_to_wav_base64(ref_audio: str) -> str:
+    """Convert a data-URI audio to WAV base64 using ffmpeg.
+
+    Supports webm, mp4, m4a, ogg, etc. If ref_audio is already a path/URL
+    or a WAV/MP3 data URI, it is returned unchanged.
+    """
+    if not ref_audio.startswith("data:"):
+        return ref_audio
+
+    # Parse data URI: data:[<mediatype>][;base64],<data>
+    try:
+        header, b64_data = ref_audio.split(",", 1)
+    except ValueError:
+        return ref_audio
+
+    mime = header.split(";")[0].replace("data:", "").strip()
+    if mime in {"audio/wav", "audio/x-wav", "audio/wave"}:
+        return ref_audio  # Already WAV
+
+    audio_bytes = base64.b64decode(b64_data)
+
+    with tempfile.NamedTemporaryFile(suffix=".bin", delete=False) as src_tmp:
+        src_tmp.write(audio_bytes)
+        src_path = src_tmp.name
+
+    dst_path = src_path + ".wav"
+    try:
+        subprocess.run(
+            [
+                "ffmpeg",
+                "-y",
+                "-i",
+                src_path,
+                "-ar",
+                "24000",
+                "-ac",
+                "1",
+                "-acodec",
+                "pcm_s16le",
+                dst_path,
+            ],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=True,
+        )
+        with open(dst_path, "rb") as f:
+            wav_bytes = f.read()
+        wav_b64 = base64.b64encode(wav_bytes).decode("utf-8")
+        return f"data:audio/wav;base64,{wav_b64}"
+    except subprocess.CalledProcessError:
+        logger.warning("ffmpeg conversion failed for mime %s, passing through", mime)
+        return ref_audio
+    finally:
+        try:
+            os.remove(src_path)
+        except OSError:
+            pass
+        try:
+            os.remove(dst_path)
+        except OSError:
+            pass
 
 
 class QwenTTSEngine(BaseTTSEngine):
@@ -41,7 +108,7 @@ class QwenTTSEngine(BaseTTSEngine):
         """
         self._base_url = base_url.rstrip("/")
         self._api_key = api_key
-        self._client = httpx.Client(timeout=300.0)
+        self._client = httpx.Client(timeout=1800.0)
 
     def _call_endpoint(
         self,
@@ -185,6 +252,9 @@ class QwenTTSEngine(BaseTTSEngine):
             language.title() if language != "auto" else language
         )
 
+        # Convert webm/mp4/ogg data URIs to WAV so the TTS server can read them
+        ref_audio = _convert_audio_to_wav_base64(ref_audio)
+
         payload = {
             "model": "Qwen/Qwen3-TTS-12Hz-1.7B-Base",
             "input": text,
@@ -197,6 +267,37 @@ class QwenTTSEngine(BaseTTSEngine):
             payload["ref_text"] = ref_text
 
         return self._call_endpoint("/v1/audio/voice-clone", payload)
+
+    def synthesize_voice_clone_with_prompt(
+        self,
+        text: str,
+        voice_clone_prompt_b64: str,
+        language: str,
+    ) -> SynthesisResult:
+        """Clone a voice using a pre-computed voice clone prompt.
+
+        Args:
+            text: Text to convert to speech.
+            voice_clone_prompt_b64: Base64-encoded voice clone prompt
+                returned by /v1/audio/voice-clone/prompt.
+            language: Language name or 'auto'.
+
+        Returns:
+            SynthesisResult with audio samples.
+        """
+        language_normalized = (
+            language.title() if language != "auto" else language
+        )
+
+        payload = {
+            "model": "Qwen/Qwen3-TTS-12Hz-1.7B-Base",
+            "input": text,
+            "voice_clone_prompt_b64": voice_clone_prompt_b64,
+            "response_format": "wav",
+            "language": language_normalized,
+        }
+
+        return self._call_endpoint("/v1/audio/voice-clone/generate", payload)
 
     @classmethod
     def map_emotion_preset(cls, preset: str) -> str:
