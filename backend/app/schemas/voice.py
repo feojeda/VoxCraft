@@ -31,6 +31,7 @@ class VoiceResponse(BaseModel):
     ref_text: str
     duration_seconds: float
     sample_rate: int
+    voice_clone_prompt_b64: str | None = None
     created_at: datetime
 
     model_config = {"from_attributes": True}

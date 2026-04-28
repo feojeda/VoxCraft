@@ -22,6 +22,7 @@ from app.api.routes.share import router as share_router
 from app.api.routes.tts import router as tts_router
 from app.api.routes.voices import router as voices_router
 from app.config import settings
+from app.core.database import init_db
 
 logger = logging.getLogger(__name__)
 
@@ -30,6 +31,7 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Application lifespan: runs startup/shutdown logic."""
     logger.info("ttsQwen API starting up — version 0.1.0")
+    await init_db()
     yield
     logger.info("ttsQwen API shutting down")
 

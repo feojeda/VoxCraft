@@ -165,6 +165,27 @@ async def get_job_status(
         raise HTTPException(status_code=404, detail=f"Job '{job_id}' not found")
 
     # Build audio URLs from paths when job is completed
-    response = JobStatusResponse.model_validate(job)
+    wav_url = f"/api/audio/{job.id}/wav" if job.audio_wav_path else None
+    mp3_url = f"/api/audio/{job.id}/mp3" if job.audio_mp3_path else None
+
+    response = JobStatusResponse(
+        id=job.id,
+        status=job.status,
+        progress=job.progress,
+        text=job.text,
+        mode=job.mode,
+        language=job.language,
+        speaker=job.speaker,
+        speed=job.speed,
+        instruct=job.instruct,
+        instructions=job.instructions,
+        ref_audio=job.ref_audio,
+        ref_text=job.ref_text,
+        audio_wav_url=wav_url,
+        audio_mp3_url=mp3_url,
+        error_message=job.error_message,
+        created_at=job.created_at,
+        completed_at=job.completed_at,
+    )
 
     return response

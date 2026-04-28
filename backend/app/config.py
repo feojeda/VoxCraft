@@ -42,8 +42,8 @@ class Settings(BaseSettings):
     # GPU / Inference (legacy — only used if loading model locally)
     GPU_DEVICE: str = "cuda:0"
     WORKER_CONCURRENCY: int = 1
-    TASK_SOFT_TIME_LIMIT: int = 300
-    TASK_TIME_LIMIT: int = 600
+    TASK_SOFT_TIME_LIMIT: int = 1800
+    TASK_TIME_LIMIT: int = 3600
 
 
 settings = Settings()

@@ -59,12 +59,20 @@ def generate_voice_clone(
         model_manager = get_model_manager()
         engine = model_manager.get_engine()
 
-        result = engine.synthesize_voice_clone(
-            text=text,
-            ref_audio=voice.audio_path,
-            ref_text=voice.ref_text,
-            language=language,
-        )
+        # Use cached prompt if available (avoids sending audio every time)
+        if voice.voice_clone_prompt_b64:
+            result = engine.synthesize_voice_clone_with_prompt(
+                text=text,
+                voice_clone_prompt_b64=voice.voice_clone_prompt_b64,
+                language=language,
+            )
+        else:
+            result = engine.synthesize_voice_clone(
+                text=text,
+                ref_audio=voice.audio_path,
+                ref_text=voice.ref_text,
+                language=language,
+            )
 
         await job_manager.update_job_status(job_id, "processing", progress=50)
 

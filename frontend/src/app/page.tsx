@@ -134,6 +134,7 @@ export default function Home() {
     if (mode === "speech" && !selectedSpeaker && !clonedVoiceId) return true;
     if (mode === "voice-design" && !instructions.trim()) return true;
     if (mode === "voice-clone" && !refAudio) return true;
+    if (mode === "voice-clone" && !refText.trim()) return true;
     return false;
   };
 

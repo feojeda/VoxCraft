@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import {
@@ -145,12 +146,9 @@ function BatchItemTable({ items }: { items: BatchItem[] }) {
   );
 }
 
-export default function BatchDetailPage({
-  params,
-}: {
-  params: { batchId: string };
-}) {
-  const batchId = params.batchId;
+export default function BatchDetailPage() {
+  const params = useParams();
+  const batchId = params.batchId as string;
   const [zipFormat, setZipFormat] = useState<"mp3" | "both">("mp3");
   const [isDownloading, setIsDownloading] = useState(false);
 

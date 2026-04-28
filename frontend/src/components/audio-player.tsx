@@ -16,71 +16,85 @@ export function AudioPlayer({ audioUrl, isGenerating }: AudioPlayerProps) {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isReady, setIsReady] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
-  // Initialize WaveSurfer
+  // Initialize WaveSurfer and load audio when URL changes
   useEffect(() => {
-    if (!containerRef.current) return;
+    if (!audioUrl || !containerRef.current) return;
+
+    setIsReady(false);
+    setLoadError(null);
+    setCurrentTime(0);
+    setDuration(0);
+    setIsPlaying(false);
 
     let ws: WaveSurfer | null = null;
+    let objectUrl: string | null = null;
 
-    import("wavesurfer.js").then(({ default: WaveSurfer }) => {
-      if (!containerRef.current) return;
+    const init = async () => {
+      try {
+        const { default: WaveSurfer } = await import("wavesurfer.js");
+        if (!containerRef.current) return;
 
-      ws = WaveSurfer.create({
-        container: containerRef.current,
-        waveColor: "#3a3650",
-        progressColor: "#6B65A0",
-        cursorColor: "#7c5bf5",
-        height: 80,
-        barWidth: 2,
-        barGap: 1,
-        barRadius: 2,
-        backend: "WebAudio",
-        normalize: true,
-      });
+        ws = WaveSurfer.create({
+          container: containerRef.current,
+          waveColor: "#3a3650",
+          progressColor: "#6B65A0",
+          cursorColor: "#7c5bf5",
+          height: 80,
+          barWidth: 2,
+          barGap: 1,
+          barRadius: 2,
+          backend: "WebAudio",
+          normalize: true,
+        });
 
-      ws.on("ready", () => {
-        setDuration(ws!.getDuration());
-        setIsReady(true);
-      });
+        ws.on("ready", () => {
+          setDuration(ws!.getDuration());
+          setIsReady(true);
+        });
 
-      ws.on("audioprocess", () => {
-        setCurrentTime(ws!.getCurrentTime());
-      });
+        ws.on("audioprocess", () => {
+          setCurrentTime(ws!.getCurrentTime());
+        });
 
-      ws.on("play", () => {
-        setIsPlaying(true);
-      });
+        ws.on("play", () => setIsPlaying(true));
+        ws.on("pause", () => setIsPlaying(false));
+        ws.on("finish", () => {
+          setIsPlaying(false);
+          setCurrentTime(0);
+        });
 
-      ws.on("pause", () => {
-        setIsPlaying(false);
-      });
+        ws.on("error", (err: unknown) => {
+          console.error("WaveSurfer error:", err);
+          setLoadError("Failed to load audio");
+        });
 
-      ws.on("finish", () => {
-        setIsPlaying(false);
-        setCurrentTime(0);
-      });
+        wavesurferRef.current = ws;
 
-      wavesurferRef.current = ws;
-    });
+        // Fetch audio with auth cookies
+        const res = await fetch(audioUrl, { credentials: "include" });
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}`);
+        }
+        const blob = await res.blob();
+        objectUrl = URL.createObjectURL(blob);
+        ws.load(objectUrl);
+      } catch (err) {
+        console.error("Audio load error:", err);
+        setLoadError("Failed to load audio");
+      }
+    };
+
+    init();
 
     return () => {
       if (ws) {
         ws.destroy();
         wavesurferRef.current = null;
       }
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-  }, []);
-
-  // Load audio when URL changes
-  useEffect(() => {
-    if (audioUrl && wavesurferRef.current) {
-      setIsReady(false);
-      setCurrentTime(0);
-      setDuration(0);
-      setIsPlaying(false);
-      wavesurferRef.current.load(audioUrl);
-    }
   }, [audioUrl]);
 
   const togglePlayPause = useCallback(() => {
@@ -135,6 +149,13 @@ export function AudioPlayer({ audioUrl, isGenerating }: AudioPlayerProps) {
         className="mb-3 min-h-[80px] rounded-md overflow-hidden"
         style={{ background: "var(--surface)" }}
       />
+
+      {/* Error state */}
+      {loadError && (
+        <div className="mb-3 text-xs text-[var(--error)]">
+          {loadError}
+        </div>
+      )}
 
       {/* Controls row */}
       <div className="flex items-center gap-3">
