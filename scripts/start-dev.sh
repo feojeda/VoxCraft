@@ -2,8 +2,8 @@
 # VoxCraft — Start local development environment
 #
 # Starts all services for local development:
-#   1. Redis (via Docker, if not already running)
-#   2. Backend FastAPI server (uvicorn, port 8000) — proxies TTS to external server
+#   1. Redis (native redis-server, if not already running)
+#   2. Backend FastAPI server (uvicorn, port 8001) — proxies TTS to external server
 #   3. Celery worker (queues TTS jobs, calls external OpenAI-compatible server)
 #   4. Frontend Next.js dev server (port 3000)
 #
@@ -14,6 +14,7 @@
 #   ./scripts/start-dev.sh          # Start all services
 #   ./scripts/start-dev.sh backend  # Start backend + Redis only
 #   ./scripts/start-dev.sh frontend # Start frontend only
+#   ./scripts/start-dev.sh redis    # Start Redis only
 #
 # Stop all services: ./scripts/stop-dev.sh
 
@@ -61,27 +62,40 @@ fi
 
 # ─── Redis ────────────────────────────────────────────────────────────────────
 start_redis() {
-    if docker exec voxcraft-redis redis-cli ping > /dev/null 2>&1; then
-        ok "Redis already running (Docker)"
+    if command -v redis-cli >/dev/null 2>&1 && redis-cli ping >/dev/null 2>&1; then
+        ok "Redis already running (native)"
         return 0
     fi
 
-    if docker ps --format '{{.Names}}' | grep -q 'voxcraft-redis'; then
-        ok "Redis container already running"
-        return 0
+    if ! command -v redis-server >/dev/null 2>&1; then
+        err "redis-server not found. Install it first:"
+        err "  sudo apt-get install -y redis-server"
+        exit 1
     fi
 
-    info "Starting Redis via Docker..."
-    docker run -d \
-        --name voxcraft-redis \
-        -p 6379:6379 \
-        redis:7-alpine \
-        redis-server --appendonly yes \
+    info "Starting Redis (native)..."
+    redis-server --daemonize yes --port 6379 \
         > /dev/null 2>&1 || {
-            err "Failed to start Redis. Is Docker running? (colima start)"
+            err "Failed to start redis-server"
             exit 1
         }
-    ok "Redis started on localhost:6379"
+
+    # Wait a moment for Redis to be ready
+    local waited=0
+    while [ $waited -lt 5 ]; do
+        if redis-cli ping >/dev/null 2>&1; then
+            break
+        fi
+        sleep 1
+        waited=$((waited + 1))
+    done
+
+    if redis-cli ping >/dev/null 2>&1; then
+        ok "Redis started on localhost:6379"
+    else
+        err "Redis did not become ready"
+        exit 1
+    fi
 }
 
 # ─── Backend ──────────────────────────────────────────────────────────────────
@@ -101,12 +115,12 @@ start_backend() {
         cd "${ROOT_DIR}/backend"
         .venv/bin/uvicorn app.main:app \
             --host 0.0.0.0 \
-            --port 8000 \
+            --port 8001 \
             --reload \
             > "${LOG_DIR}/api.log" 2>&1 &
         echo $! > "${PID_DIR}/api.pid"
         cd "$ROOT_DIR"
-        ok "Backend API started on http://localhost:8000"
+        ok "Backend API started on http://localhost:8001"
     fi
 
     if [ -f "${PID_DIR}/worker.pid" ] && kill -0 "$(cat "${PID_DIR}/worker.pid")" 2>/dev/null; then
@@ -181,9 +195,9 @@ echo ""
 echo "  Services:"
 echo ""
 if [ -f "${PID_DIR}/api.pid" ]; then
-    echo "    Backend API:   http://localhost:8000"
-    echo "    API Health:    http://localhost:8000/api/health"
-    echo "    API Docs:      http://localhost:8000/docs"
+    echo "    Backend API:   http://localhost:8001"
+    echo "    API Health:    http://localhost:8001/api/health"
+    echo "    API Docs:      http://localhost:8001/docs"
 fi
 if [ -f "${PID_DIR}/worker.pid" ]; then
     echo "    Celery Worker: running (proxies TTS to external server)"

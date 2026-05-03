@@ -5,7 +5,7 @@
 #   - Frontend Next.js dev server
 #   - Celery worker (TTS proxy)
 #   - Backend FastAPI server
-#   - Redis Docker container
+#   - Redis native server
 #
 # Usage:
 #   ./scripts/stop-dev.sh       # Stop all services
@@ -70,11 +70,10 @@ stop_pid "worker"
 stop_pid "api"
 
 if [ "$KEEP_REDIS" != "keep" ]; then
-    if docker ps --format '{{.Names}}' | grep -q 'voxcraft-redis'; then
-        info "Stopping Redis container..."
-        docker stop voxcraft-redis > /dev/null 2>&1 || true
-        docker rm voxcraft-redis > /dev/null 2>&1 || true
-        ok "Redis stopped and removed"
+    if command -v redis-cli >/dev/null 2>&1 && redis-cli ping >/dev/null 2>&1; then
+        info "Stopping Redis (native)..."
+        redis-cli shutdown >/dev/null 2>&1 || true
+        ok "Redis stopped"
     else
         info "Redis not running"
     fi

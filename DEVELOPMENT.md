@@ -7,13 +7,16 @@
 cp .env.example .env
 
 # 2. Configure the external TTS server (edit .env)
-#    TTS_SERVER_URL=http://192.168.4.35:8000
+#    TTS_SERVER_URL=http://127.0.0.1:8000
 #    TTS_SERVER_API_KEY=dummy
 
-# 3. Start everything
+# 3. Install Redis (one time)
+sudo apt-get install -y redis-server
+
+# 4. Start everything
 ./scripts/start-dev.sh
 
-# 4. Stop everything
+# 5. Stop everything
 ./scripts/stop-dev.sh
 ```
 
@@ -30,7 +33,7 @@ Starts local development services.
 | `frontend` | Frontend only |
 | `redis` | Redis only |
 
-On first run it auto-creates `.env` from `.env.example` with `GPU_DEVICE=cpu` and installs dependencies if missing.
+On first run it auto-creates `.env` from `.env.example` and installs dependencies if missing.
 
 ### `./scripts/stop-dev.sh [keep]`
 
@@ -43,10 +46,12 @@ Stops all services. Use `keep` to stop processes but keep Redis running.
 | Service | URL |
 |---------|-----|
 | Frontend | http://localhost:3000 |
-| Backend API | http://localhost:8000 |
-| API Health | http://localhost:8000/api/health |
-| Swagger Docs | http://localhost:8000/docs |
-| TTS Server | `TTS_SERVER_URL` from `.env` (external) |
+| Backend API | http://localhost:8001 |
+| API Health | http://localhost:8001/api/health |
+| Swagger Docs | http://localhost:8001/docs |
+| TTS Server | `TTS_SERVER_URL` from `.env` (external, port 8000) |
+
+> **Note:** The API runs on port `8001` to avoid conflict with the external TTS server which typically runs on port `8000`.
 
 ## Logs
 
@@ -64,13 +69,20 @@ tail -f .dev-logs/frontend.log  # Next.js dev server
 
 - **Python 3.12+** (with `uv` package manager)
 - **Node.js 20+** (with `pnpm`)
-- **Docker** (for Redis — or a local Redis server)
+- **Redis** (native `redis-server` — see below)
 - **External TTS Server** running (see `TTS_SERVER_URL` in `.env`)
 
 ### 1. Redis
 
 ```bash
-docker run -d --name voxcraft-redis -p 6379:6379 redis:7-alpine
+# Install (one time)
+sudo apt-get install -y redis-server
+
+# Start
+redis-server --daemonize yes
+
+# Verify
+redis-cli ping   # should reply PONG
 ```
 
 ### 2. Backend
@@ -82,8 +94,8 @@ cd backend
 uv venv .venv --python 3.12
 uv pip install -r requirements.txt --python .venv/bin/python
 
-# Start API server (hot-reload)
-.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+# Start API server (hot-reload) on port 8001
+.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
 
 # In another terminal — start Celery worker
 cd backend
@@ -92,7 +104,7 @@ cd backend
 
 > **Note:** The backend no longer loads ML models locally. It proxies TTS
 > requests to the external server configured in `TTS_SERVER_URL`. No GPU
-> is needed in the backend container/process.
+> is needed in the backend process.
 
 ### 3. Frontend
 
@@ -108,33 +120,19 @@ pnpm dev
 
 ---
 
-## Docker Compose (Full Stack)
+## Docker Compose (optional)
 
-For a containerized full-stack environment (production-like):
+If you prefer a fully containerized environment, `docker-compose.yml` is still provided for production-like deployments. However, for local development with an external TTS server running on the host (port 8000), running natively is simpler and avoids network bridging issues.
 
 ```bash
-# Ensure Docker is running
-colima start    # macOS with Colima
-
-# Start all services
+# Start all services in Docker (advanced / CI use)
 docker compose up --build
-
-# Start only backend services
-docker compose up redis api worker
-
-# Follow logs
-docker compose logs -f worker
 
 # Stop
 docker compose down
-
-# Run pipeline integration test
-./scripts/test-pipeline.sh
 ```
 
-> **Note:** The `worker` service no longer needs GPU access. TTS inference
-> runs on the external server (see `TTS_SERVER_URL` in `.env`). The worker
-> only needs network connectivity to that server.
+> **Note:** When using Docker Compose, ensure the TTS server is accessible from within the Docker network (e.g., use `host.docker.internal:8000` on macOS/Windows or run the TTS server in Docker too).
 
 ---
 
@@ -144,7 +142,7 @@ See `.env.example` for all available variables. Key ones:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `TTS_SERVER_URL` | `http://192.168.4.35:8000` | External OpenAI-compatible TTS server |
+| `TTS_SERVER_URL` | `http://127.0.0.1:8000` | External OpenAI-compatible TTS server |
 | `TTS_SERVER_API_KEY` | `dummy` | API key for the TTS server |
 | `DATABASE_URL` | `sqlite+aiosqlite:///./voxcraft.db` | SQLite for dev |
 | `REDIS_URL` | `redis://localhost:6379/0` | Redis broker |

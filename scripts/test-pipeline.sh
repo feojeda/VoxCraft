@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # VoxCraft End-to-End Pipeline Test
 #
-# Validates the complete TTS pipeline running in Docker Compose:
+# Validates the complete TTS pipeline:
 # 1. Wait for API to be healthy
 # 2. POST a generate request
 # 3. Poll job status until completed
@@ -9,11 +9,11 @@
 #
 # Usage:
 #   ./scripts/test-pipeline.sh
-#   API_URL=http://my-host:8000 ./scripts/test-pipeline.sh
+#   API_URL=http://my-host:8001 ./scripts/test-pipeline.sh
 
 set -euo pipefail
 
-API_URL="${API_URL:-http://localhost:8000}"
+API_URL="${API_URL:-http://localhost:8001}"
 TIMEOUT="${TIMEOUT:-60}"
 SPEAKER="ryan"
 TEXT="Hello, this is a test."
