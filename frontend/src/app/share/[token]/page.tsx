@@ -57,7 +57,7 @@ export default function SharePage() {
           <Link href="/" className="mb-6 inline-flex items-center gap-1.5">
             <Sparkles className="h-5 w-5 text-[var(--accent)]" />
             <span className="text-sm font-semibold text-[var(--text-primary)]">
-              ttsQwen
+                 VoxCraft
             </span>
           </Link>
           <h1 className="mb-2 text-lg font-semibold text-[var(--text-primary)]">
@@ -91,7 +91,7 @@ export default function SharePage() {
             <Link href="/" className="flex items-center gap-1.5">
               <Sparkles className="h-5 w-5 text-[var(--accent)]" />
               <span className="text-sm font-semibold text-[var(--text-primary)]">
-                ttsQwen
+                VoxCraft
               </span>
             </Link>
           </div>

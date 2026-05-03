@@ -1,4 +1,4 @@
-# ttsQwen Backend — FastAPI + Celery Worker
+# VoxCraft Backend — FastAPI + Celery Worker
 #
 # The worker proxies TTS requests to an external OpenAI-compatible server
 # instead of loading models locally. No GPU needed in this container.

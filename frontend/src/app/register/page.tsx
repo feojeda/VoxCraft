@@ -62,7 +62,7 @@ export default function RegisterPage() {
         <div className="mb-8 text-center">
           <div className="mb-3 flex items-center justify-center gap-2">
             <Sparkles className="h-8 w-8 text-[var(--accent)]" />
-            <h1 className="text-2xl font-bold tracking-tight">ttsQwen</h1>
+            <h1 className="text-2xl font-bold tracking-tight">VoxCraft</h1>
           </div>
           <p className="text-sm text-[var(--text-secondary)]">
             Create a new account

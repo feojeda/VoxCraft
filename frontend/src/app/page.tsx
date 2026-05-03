@@ -153,7 +153,7 @@ export default function Home() {
           <div className="flex items-center justify-center gap-2">
             <Sparkles className="h-7 w-7 text-[var(--accent)]" />
             <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
-              ttsQwen
+               VoxCraft
             </h1>
           </div>
           <p className="mt-2 text-[var(--text-secondary)]">

@@ -1,4 +1,4 @@
-# ttsQwen Docker Compose — full stack local development
+# VoxCraft Docker Compose — full stack local development
 #
 # Services:
 #   api:      FastAPI application (hot-reload enabled)
@@ -36,7 +36,7 @@ services:
     volumes:
       - audio_output:/app/audio_output
     networks:
-      - ttsqwen
+      - voxcraft
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     # Memory limit to prevent resource exhaustion (T-05-02)
     mem_limit: 512m
@@ -52,7 +52,7 @@ services:
     volumes:
       - audio_output:/app/audio_output
     networks:
-      - ttsqwen
+      - voxcraft
     # GPU access via NVIDIA Container Toolkit needed for production
     # For local dev without GPU, the worker runs on CPU (slow but functional)
     # deploy:
@@ -73,7 +73,7 @@ services:
     volumes:
       - redis_data:/data
     networks:
-      - ttsqwen
+      - voxcraft
     command: redis-server --appendonly yes
 
   frontend:
@@ -87,12 +87,12 @@ services:
     depends_on:
       - api
     networks:
-      - ttsqwen
+      - voxcraft
     environment:
       - NEXT_PUBLIC_API_URL=/api
 
 networks:
-  ttsqwen:
+  voxcraft:
     driver: bridge
 
 volumes:

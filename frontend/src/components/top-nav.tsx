@@ -49,7 +49,7 @@ export function TopNav() {
         <Link href="/" className="flex items-center gap-1.5">
           <Sparkles className="h-5 w-5 text-[var(--accent)]" />
           <span className="text-sm font-semibold text-[var(--text-primary)]">
-            ttsQwen
+            VoxCraft
           </span>
         </Link>
 

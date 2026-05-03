@@ -2,7 +2,7 @@
 description: Start local development environment (Redis + Backend + Frontend + TTS proxy)
 ---
 
-Start the ttsQwen local development environment by running:
+Start the VoxCraft local development environment by running:
 
 ```bash
 ./scripts/start-dev.sh $ARGUMENTS

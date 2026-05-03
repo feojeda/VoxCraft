@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# ttsQwen End-to-End Pipeline Test
+# VoxCraft End-to-End Pipeline Test
 #
 # Validates the complete TTS pipeline running in Docker Compose:
 # 1. Wait for API to be healthy
@@ -19,7 +19,7 @@ SPEAKER="ryan"
 TEXT="Hello, this is a test."
 
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo " ttsQwen Pipeline Integration Test"
+echo " VoxCraft Pipeline Integration Test"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 echo "API: ${API_URL}"

@@ -1,4 +1,4 @@
-# ttsQwen — Development Guide
+# VoxCraft — Development Guide
 
 ## Quick Start
 
@@ -70,7 +70,7 @@ tail -f .dev-logs/frontend.log  # Next.js dev server
 ### 1. Redis
 
 ```bash
-docker run -d --name ttsqwen-redis -p 6379:6379 redis:7-alpine
+docker run -d --name voxcraft-redis -p 6379:6379 redis:7-alpine
 ```
 
 ### 2. Backend
@@ -146,7 +146,7 @@ See `.env.example` for all available variables. Key ones:
 |----------|---------|-------------|
 | `TTS_SERVER_URL` | `http://192.168.4.35:8000` | External OpenAI-compatible TTS server |
 | `TTS_SERVER_API_KEY` | `dummy` | API key for the TTS server |
-| `DATABASE_URL` | `sqlite+aiosqlite:///./ttsqwen.db` | SQLite for dev |
+| `DATABASE_URL` | `sqlite+aiosqlite:///./voxcraft.db` | SQLite for dev |
 | `REDIS_URL` | `redis://localhost:6379/0` | Redis broker |
 | `CORS_ORIGINS` | `["http://localhost:3000"]` | Allowed origins |
 | `GPU_DEVICE` | `cuda:0` | Legacy — only used for local model loading |

@@ -10,7 +10,7 @@ Rules:
 <!-- GSD:project-start source:PROJECT.md -->
 ## Project
 
-**ttsQwen**
+**VoxCraft**
 
 Aplicación web pública de text-to-speech (TTS) que permite a los usuarios generar audio a partir de texto, usando voces clonadas o predefinidas, con control de prosodia (SSML y emociones). Orientada a creadores de contenido que necesitan narraciones, audios para videos y podcasts.
 
@@ -89,7 +89,7 @@ Aplicación web pública de text-to-speech (TTS) que permite a los usuarios gene
 - **Recommendation:** Use `ruff` for fast linting (replaces flake8 + isort).
 ## Import Organization
 ## Error Handling
-- Use custom exception hierarchy rooted in a base `TTSQwenError`
+- Use custom exception hierarchy rooted in a base `VoxCraftError`
 - Use specific exception types (e.g., `ModelLoadError`, `SynthesisError`, `ConfigError`)
 - Prefer explicit exception handling over bare `except:` clauses
 - Log errors with context before re-raising
@@ -151,10 +151,12 @@ Aplicación web pública de text-to-speech (TTS) que permite a los usuarios gene
 - No application error handling patterns defined
 ## Cross-Cutting Concerns
 ## Project Intent (Inferred from Name)
-- **TTS** — Text-to-Speech synthesis
-- **Qwen** — Integration with Alibaba's Qwen model family
-- Expected to involve AI/ML pipeline for converting text input to speech output
-- No implementation exists to confirm this intent
+- **Vox** — Voice, speech, sound
+- **Craft** — Artesanía, construcción, diseño con cuidado y detalle
+- A tool for forging worlds with voice: not just spoken text, but acoustically designing characters, environments, and emotions
+- An immersive audio studio or fiction podcasting tool where voice is the hammer and anvil
+- TTS with soul, not robotic: "craft" implies care, detail, craftsmanship
+- Visual palette: sound palettes, waves turning into landscapes, voices woven like threads
 <!-- GSD:architecture-end -->
 
 <!-- GSD:skills-start source:skills/ -->

@@ -2,7 +2,7 @@
 description: Stop local development environment
 ---
 
-Stop the ttsQwen local development environment by running:
+Stop the VoxCraft local development environment by running:
 
 ```bash
 ./scripts/stop-dev.sh $ARGUMENTS

@@ -10,8 +10,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "ttsQwen",
-  description: "Text-to-Speech powered by Qwen3-TTS",
+  title: "VoxCraft",
+  description: "Craft your voice. Text-to-speech with voice cloning, emotion control, and custom voices.",
 };
 
 export default function RootLayout({

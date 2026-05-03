@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
     # Database
-    DATABASE_URL: str = "sqlite+aiosqlite:///./ttsqwen.db"
+    DATABASE_URL: str = "sqlite+aiosqlite:///./voxcraft.db"
 
     # Redis
     REDIS_URL: str = "redis://localhost:6379/0"

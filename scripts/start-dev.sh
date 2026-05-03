@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# ttsQwen — Start local development environment
+# VoxCraft — Start local development environment
 #
 # Starts all services for local development:
 #   1. Redis (via Docker, if not already running)
@@ -61,19 +61,19 @@ fi
 
 # ─── Redis ────────────────────────────────────────────────────────────────────
 start_redis() {
-    if docker exec ttsqwen-redis redis-cli ping > /dev/null 2>&1; then
+    if docker exec voxcraft-redis redis-cli ping > /dev/null 2>&1; then
         ok "Redis already running (Docker)"
         return 0
     fi
 
-    if docker ps --format '{{.Names}}' | grep -q 'ttsqwen-redis'; then
+    if docker ps --format '{{.Names}}' | grep -q 'voxcraft-redis'; then
         ok "Redis container already running"
         return 0
     fi
 
     info "Starting Redis via Docker..."
     docker run -d \
-        --name ttsqwen-redis \
+        --name voxcraft-redis \
         -p 6379:6379 \
         redis:7-alpine \
         redis-server --appendonly yes \
@@ -148,7 +148,7 @@ start_frontend() {
 # ─── Main ─────────────────────────────────────────────────────────────────────
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo " ttsQwen — Starting Development Environment"
+echo " VoxCraft — Starting Development Environment"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 

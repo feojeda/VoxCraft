@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# ttsQwen — Stop local development environment
+# VoxCraft — Stop local development environment
 #
 # Stops all services started by start-dev.sh:
 #   - Frontend Next.js dev server
@@ -30,7 +30,7 @@ KEEP_REDIS="${1:-""}"
 
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo " ttsQwen — Stopping Development Environment"
+echo " VoxCraft — Stopping Development Environment"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
@@ -70,10 +70,10 @@ stop_pid "worker"
 stop_pid "api"
 
 if [ "$KEEP_REDIS" != "keep" ]; then
-    if docker ps --format '{{.Names}}' | grep -q 'ttsqwen-redis'; then
+    if docker ps --format '{{.Names}}' | grep -q 'voxcraft-redis'; then
         info "Stopping Redis container..."
-        docker stop ttsqwen-redis > /dev/null 2>&1 || true
-        docker rm ttsqwen-redis > /dev/null 2>&1 || true
+        docker stop voxcraft-redis > /dev/null 2>&1 || true
+        docker rm voxcraft-redis > /dev/null 2>&1 || true
         ok "Redis stopped and removed"
     else
         info "Redis not running"

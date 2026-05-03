@@ -1,4 +1,4 @@
-# ttsQwen Frontend — Next.js with standalone output
+# VoxCraft Frontend — Next.js with standalone output
 #
 # Multi-stage build for optimized production image.
 

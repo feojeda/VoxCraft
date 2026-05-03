@@ -1,1 +1,1 @@
-"""ttsQwen backend application."""
+"""VoxCraft backend application."""

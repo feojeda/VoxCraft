@@ -1,4 +1,4 @@
-"""Celery application configuration for ttsQwen.
+"""Celery application configuration for VoxCraft.
 
 Configures the Celery worker with Redis broker, production-ready settings
 for GPU-bound TTS inference, and auto-discovery of task modules.
@@ -14,7 +14,7 @@ from celery import Celery
 
 from app.config import settings
 
-celery_app = Celery("ttsqwen")
+celery_app = Celery("voxcraft")
 
 celery_app.conf.update(
     broker_url=settings.CELERY_BROKER_URL,

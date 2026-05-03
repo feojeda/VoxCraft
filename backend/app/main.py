@@ -30,14 +30,14 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Application lifespan: runs startup/shutdown logic."""
-    logger.info("ttsQwen API starting up — version 0.1.0")
+    logger.info("VoxCraft API starting up — version 0.1.0")
     await init_db()
     yield
-    logger.info("ttsQwen API shutting down")
+    logger.info("VoxCraft API shutting down")
 
 
 app = FastAPI(
-    title="ttsQwen API",
+    title="VoxCraft API",
     description="Text-to-speech generation API powered by Qwen3-TTS",
     version="0.1.0",
     lifespan=lifespan,
