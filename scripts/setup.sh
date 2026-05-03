@@ -9,6 +9,12 @@
 
 set -euo pipefail
 
+# Ensure pnpm is in PATH (installed via official installer)
+PNPM_HOME="${PNPM_HOME:-${HOME}/.local/share/pnpm}"
+if [ -d "$PNPM_HOME" ]; then
+    export PATH="${PNPM_HOME}:${PATH}"
+fi
+
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 
 RED='\033[0;31m'
@@ -99,7 +105,9 @@ if check_cmd pnpm; then
     ok "pnpm $(pnpm --version)"
 else
     warn "pnpm not found. Installing..."
-    npm install -g pnpm
+    curl -fsSL https://get.pnpm.io/install.sh | sh -
+    PNPM_HOME="${HOME}/.local/share/pnpm"
+    export PATH="${PNPM_HOME}:${PATH}"
     ok "pnpm installed"
 fi
 

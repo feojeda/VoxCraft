@@ -20,6 +20,12 @@
 
 set -euo pipefail
 
+# Ensure pnpm is in PATH (installed via official installer)
+PNPM_HOME="${PNPM_HOME:-${HOME}/.local/share/pnpm}"
+if [ -d "$PNPM_HOME" ]; then
+    export PATH="${PNPM_HOME}:${PATH}"
+fi
+
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 PID_DIR="${ROOT_DIR}/.dev-pids"
 LOG_DIR="${ROOT_DIR}/.dev-logs"
