@@ -4,7 +4,12 @@ Uses pydantic-settings to load configuration from environment variables
 and .env files. All settings have sensible defaults for local development.
 """
 
+from pathlib import Path
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+_PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+_ENV_FILE = _PROJECT_ROOT / ".env"
 
 
 class Settings(BaseSettings):
@@ -13,7 +18,7 @@ class Settings(BaseSettings):
     All values can be overridden via a .env file or environment variables.
     """
 
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+    model_config = SettingsConfigDict(env_file=str(_ENV_FILE), env_file_encoding="utf-8")
 
     # Database
     DATABASE_URL: str = "sqlite+aiosqlite:///./voxcraft.db"
@@ -36,7 +41,7 @@ class Settings(BaseSettings):
     CORS_ORIGINS: list[str] = ["http://localhost:3000"]
 
     # TTS Server (OpenAI-compatible HTTP API)
-    TTS_SERVER_URL: str = "http://192.168.4.35:8000"
+    TTS_SERVER_URL: str = "http://127.0.0.1:8000"
     TTS_SERVER_API_KEY: str = "dummy"
 
     # GPU / Inference (legacy — only used if loading model locally)
