@@ -146,10 +146,18 @@ start_backend() {
 }
 
 # ─── Frontend ─────────────────────────────────────────────────────────────────
+FRONTEND_PORT=3005
+
 start_frontend() {
     if [ -f "${PID_DIR}/frontend.pid" ] && kill -0 "$(cat "${PID_DIR}/frontend.pid")" 2>/dev/null; then
         ok "Frontend already running (PID $(cat "${PID_DIR}/frontend.pid"))"
     else
+        if ss -tlnp 2>/dev/null | grep -q ":${FRONTEND_PORT} "; then
+            err "Port ${FRONTEND_PORT} is already in use. Stop the process using it first."
+            err "  Run: ss -tlnp | grep ${FRONTEND_PORT}"
+            exit 1
+        fi
+
         info "Starting frontend (Next.js dev server)..."
         cd "${ROOT_DIR}/frontend"
 
@@ -161,7 +169,7 @@ start_frontend() {
         pnpm dev > "${LOG_DIR}/frontend.log" 2>&1 &
         echo $! > "${PID_DIR}/frontend.pid"
         cd "$ROOT_DIR"
-        ok "Frontend started on http://localhost:3000"
+        ok "Frontend started on http://localhost:${FRONTEND_PORT}"
     fi
 }
 
@@ -209,7 +217,7 @@ if [ -f "${PID_DIR}/worker.pid" ]; then
     echo "    Celery Worker: running (proxies TTS to external server)"
 fi
 if [ -f "${PID_DIR}/frontend.pid" ]; then
-    echo "    Frontend:      http://localhost:3000"
+    echo "    Frontend:      http://localhost:${FRONTEND_PORT}"
 fi
 echo ""
 echo "  TTS Server:"

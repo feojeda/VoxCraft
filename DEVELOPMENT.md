@@ -45,7 +45,7 @@ Stops all services. Use `keep` to stop processes but keep Redis running.
 
 | Service | URL |
 |---------|-----|
-| Frontend | http://localhost:3000 |
+| Frontend | http://localhost:3005 |
 | Backend API | http://localhost:8001 |
 | API Health | http://localhost:8001/api/health |
 | Swagger Docs | http://localhost:8001/docs |
