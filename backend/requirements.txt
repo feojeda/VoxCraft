@@ -20,7 +20,7 @@ httpx>=0.28
 soundfile>=0.12
 
 # Authentication
-passlib[bcrypt]>=1.7
+bcrypt>=4.0
 python-jose[cryptography]>=3.4
 email-validator>=2.0
 
