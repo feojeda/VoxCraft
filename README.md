@@ -2,6 +2,8 @@
 
 **Forge worlds with your voice.**
 
+[Leer en español](README.es.md)
+
 VoxCraft is a text-to-speech (TTS) web application that generates high-quality audio from text using cloned or predefined voices, with expressive prosody control (emotions, speed, style instructions). Built for content creators who need narrations, audio for videos, and podcasts.
 
 ---
