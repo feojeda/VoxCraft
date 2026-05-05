@@ -55,7 +55,7 @@ async def list_predefined_voices() -> dict:
 @router.post("/voices", status_code=201, response_model=VoiceResponse)
 async def create_voice(
     audio: UploadFile = File(...),
-    ref_text: str = Form(...),
+    ref_text: str | None = Form(default=None),
     name: str = Form(...),
     x_vector_only_mode: bool = Form(default=False),
     db: AsyncSession = Depends(get_db),

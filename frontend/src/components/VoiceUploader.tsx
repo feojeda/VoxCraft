@@ -46,7 +46,7 @@ export function VoiceUploader({ onUploadComplete }: VoiceUploaderProps) {
   );
 
   const handleUpload = async () => {
-    if (!file || !refText.trim() || !name.trim()) return;
+    if (!file || !name.trim()) return;
 
     setIsUploading(true);
     setError(null);
@@ -66,7 +66,7 @@ export function VoiceUploader({ onUploadComplete }: VoiceUploaderProps) {
     }
   };
 
-  const canUpload = file && refText.trim().length > 0 && name.trim().length > 0;
+  const canUpload = file && name.trim().length > 0;
 
   return (
     <div className="space-y-4">

@@ -166,10 +166,6 @@ export function useTTSGeneration({
       setError("Please upload or record a reference audio");
       return;
     }
-    if (mode === "voice-clone" && !refText.trim()) {
-      setError("Please enter the reference transcript");
-      return;
-    }
 
     // Increment generation counter to invalidate stale polling
     generationRef.current += 1;

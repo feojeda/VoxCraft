@@ -93,7 +93,7 @@ export function VoiceRecorder({ onRecordComplete }: VoiceRecorderProps) {
   };
 
   const handleUpload = async () => {
-    if (!audioBlob || !refText.trim() || !name.trim()) return;
+    if (!audioBlob || !name.trim()) return;
 
     setIsUploading(true);
     setError(null);
@@ -131,7 +131,6 @@ export function VoiceRecorder({ onRecordComplete }: VoiceRecorderProps) {
 
   const canSave =
     audioBlob &&
-    refText.trim().length > 0 &&
     name.trim().length > 0 &&
     recordingTime >= minDuration;
 

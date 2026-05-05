@@ -294,10 +294,10 @@ export function VoiceCloneInput({
       {/* Reference text */}
       <div className="space-y-2">
         <label className="text-sm font-medium text-[var(--text-primary)]">
-          Reference Transcript <span className="text-[var(--error)]">*</span>
+          Reference Transcript
         </label>
         <p className="text-xs text-[var(--text-secondary)]">
-          The exact text spoken in the reference audio. Improves cloning quality.
+          The exact text spoken in the reference audio. Improves cloning quality. Optional when using native accent mode.
         </p>
         <textarea
           value={refText}

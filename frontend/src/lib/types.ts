@@ -63,7 +63,7 @@ export interface VoiceResponse {
   id: string;
   name: string;
   audio_path: string;
-  ref_text: string;
+  ref_text: string | null;
   duration_seconds: number;
   sample_rate: number;
   voice_clone_prompt_b64?: string | null;
