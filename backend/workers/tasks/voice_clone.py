@@ -20,6 +20,7 @@ def generate_voice_clone(
     text: str,
     voice_id: str,
     language: str = "auto",
+    x_vector_only_mode: bool = False,
 ) -> None:
     """Celery task: generate speech using a cloned voice.
 
@@ -29,6 +30,7 @@ def generate_voice_clone(
         text: Text to synthesize.
         voice_id: ID of the cloned voice to use.
         language: Language name or 'auto'.
+        x_vector_only_mode: Copy only timbre for cross-lingual voice clone.
     """
     # Import here to avoid circular imports at module level
     from app.services.audio_service import audio_service
@@ -72,6 +74,7 @@ def generate_voice_clone(
                 ref_audio=voice.audio_path,
                 ref_text=voice.ref_text,
                 language=language,
+                x_vector_only_mode=voice.x_vector_only_mode,
             )
 
         await job_manager.update_job_status(job_id, "processing", progress=50)

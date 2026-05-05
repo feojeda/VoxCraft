@@ -236,6 +236,7 @@ class QwenTTSEngine(BaseTTSEngine):
         ref_audio: str,
         ref_text: str | None,
         language: str,
+        x_vector_only_mode: bool = False,
     ) -> SynthesisResult:
         """Clone a voice from reference audio.
 
@@ -244,6 +245,7 @@ class QwenTTSEngine(BaseTTSEngine):
             ref_audio: Reference audio file path, URL, or base64 string.
             ref_text: Transcript of the reference audio (optional).
             language: Language name or 'auto'.
+            x_vector_only_mode: Copy only timbre, use native prosody.
 
         Returns:
             SynthesisResult with audio samples.
@@ -261,6 +263,7 @@ class QwenTTSEngine(BaseTTSEngine):
             "ref_audio": ref_audio,
             "response_format": "wav",
             "language": language_normalized,
+            "x_vector_only_mode": x_vector_only_mode,
         }
 
         if ref_text:

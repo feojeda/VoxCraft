@@ -14,6 +14,7 @@ class VoiceCreateRequest(BaseModel):
 
     name: str = Field(..., min_length=1, max_length=100, description="Display name for the voice")
     ref_text: str = Field(..., min_length=1, max_length=5000, description="Transcript of the reference audio")
+    x_vector_only_mode: bool = Field(default=False, description="Copy only timbre, use native prosody of target language")
 
 
 class VoiceUpdateRequest(BaseModel):
@@ -32,6 +33,7 @@ class VoiceResponse(BaseModel):
     duration_seconds: float
     sample_rate: int
     voice_clone_prompt_b64: str | None = None
+    x_vector_only_mode: bool = False
     created_at: datetime
 
     model_config = {"from_attributes": True}

@@ -108,6 +108,7 @@ async def create_tts_job(
         instructions=request.instructions,
         ref_audio=request.ref_audio,
         ref_text=request.ref_text,
+        x_vector_only_mode=request.x_vector_only_mode,
         user_id=current_user.id,
         voice_name=voice_name,
     )
@@ -119,6 +120,7 @@ async def create_tts_job(
             text=request.text,
             voice_id=request.cloned_voice_id,
             language=request.language,
+            x_vector_only_mode=request.x_vector_only_mode,
         )
         logger.info(
             "Dispatched voice clone job %s: voice_id=%s, text=%d chars",
@@ -140,6 +142,7 @@ async def create_tts_job(
             ref_text=request.ref_text,
             emotion_preset=request.emotion_preset,
             pronunciation_enabled=request.pronunciation_enabled,
+            x_vector_only_mode=request.x_vector_only_mode,
         )
         logger.info(
             "Dispatched TTS job %s: mode=%s, text=%d chars",
@@ -181,6 +184,7 @@ async def get_job_status(
         instructions=job.instructions,
         ref_audio=job.ref_audio,
         ref_text=job.ref_text,
+        x_vector_only_mode=job.x_vector_only_mode,
         audio_wav_url=wav_url,
         audio_mp3_url=mp3_url,
         error_message=job.error_message,

@@ -57,6 +57,7 @@ async def create_voice(
     audio: UploadFile = File(...),
     ref_text: str = Form(...),
     name: str = Form(...),
+    x_vector_only_mode: bool = Form(default=False),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> VoiceResponse:
@@ -151,7 +152,7 @@ async def create_voice(
             json={
                 "ref_audio": audio_data_uri,
                 "ref_text": ref_text,
-                "x_vector_only_mode": False,
+                "x_vector_only_mode": x_vector_only_mode,
             },
             timeout=300.0,
         )
@@ -172,6 +173,7 @@ async def create_voice(
         duration_seconds=validation["duration"],
         sample_rate=validation["sample_rate"],
         voice_clone_prompt_b64=voice_clone_prompt_b64,
+        x_vector_only_mode=x_vector_only_mode,
         user_id=current_user.id,
     )
     db.add(voice)

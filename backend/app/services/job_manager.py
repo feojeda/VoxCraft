@@ -35,6 +35,7 @@ class JobManager:
         instructions: str | None = None,
         ref_audio: str | None = None,
         ref_text: str | None = None,
+        x_vector_only_mode: bool = False,
         user_id: str | None = None,
         voice_name: str | None = None,
     ) -> Job:
@@ -50,6 +51,7 @@ class JobManager:
             instructions: Voice description (voice-design mode).
             ref_audio: Reference audio path/URL/base64 (voice-clone mode).
             ref_text: Transcript of reference audio (voice-clone mode).
+            x_vector_only_mode: Copy only timbre for cross-lingual voice clone.
 
         Returns:
             The created Job instance with generated ID.
@@ -64,6 +66,7 @@ class JobManager:
             instructions=instructions,
             ref_audio=ref_audio,
             ref_text=ref_text,
+            x_vector_only_mode=x_vector_only_mode,
             user_id=user_id,
             voice_name=voice_name,
             status="queued",
