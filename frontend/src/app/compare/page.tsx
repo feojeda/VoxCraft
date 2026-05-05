@@ -315,9 +315,9 @@ function CompareCard({ job }: { job: CompareJobItem }) {
       ) : null}
 
       {/* Audio player */}
-      {job.status === "completed" && job.audio_wav_url ? (
+      {job.status === "completed" && (job.audio_mp3_url || job.audio_wav_url) ? (
         <div className="mt-3">
-          <audio src={job.audio_wav_url} controls className="w-full" />
+          <audio src={job.audio_mp3_url ?? job.audio_wav_url ?? undefined} controls className="w-full" />
         </div>
       ) : null}
 
