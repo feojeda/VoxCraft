@@ -116,7 +116,6 @@ async def create_comparison(
             speed=request.speed,
             instruct=cfg.instruct,
             instructions=cfg.instructions,
-            cloned_voice_id=cfg.cloned_voice_id,
             user_id=current_user.id,
             voice_name=voice_name,
         )
