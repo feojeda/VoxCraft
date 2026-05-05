@@ -15,6 +15,8 @@ import type {
   ShareLink,
   ShareListResponse,
   SharePublicData,
+  CompareVoiceConfig,
+  CompareResponse,
 } from "./types";
 
 const API_BASE_URL =
@@ -269,6 +271,19 @@ export const apiClient = {
   /** GET /api/shares/public/{token} — Get public share data */
   getPublicShare(token: string): Promise<SharePublicData> {
     return request<SharePublicData>(`/shares/public/${token}`);
+  },
+
+  /** POST /api/compare — Create a voice comparison batch */
+  createCompare(text: string, voices: CompareVoiceConfig[], language?: string, speed?: number): Promise<CompareResponse> {
+    return request<CompareResponse>("/compare", {
+      method: "POST",
+      body: JSON.stringify({ text, voices, language: language || "auto", speed: speed || 1.0 }),
+    });
+  },
+
+  /** GET /api/compare/{batch_id} — Get comparison batch status */
+  getCompare(batchId: string): Promise<CompareResponse> {
+    return request<CompareResponse>(`/compare/${batchId}`);
   },
 };
 

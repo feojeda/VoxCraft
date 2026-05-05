@@ -179,6 +179,39 @@ export interface SharePublicData {
   created_at: string;
 }
 
+// Compare / voice playground types
+export interface CompareVoiceConfig {
+  mode: TTSMode;
+  speaker?: string;
+  cloned_voice_id?: string;
+  instruct?: string;
+  emotion_preset?: string;
+  instructions?: string;
+}
+
+export interface CompareJobItem {
+  job_id: string;
+  voice_name: string;
+  status: JobStatus;
+  progress: number;
+  audio_wav_url: string | null;
+  audio_mp3_url: string | null;
+  error_message: string | null;
+  created_at: string | null;
+  completed_at: string | null;
+}
+
+export interface CompareResponse {
+  batch_id: string;
+  jobs: CompareJobItem[];
+  total: number;
+  completed_count: number;
+  failed_count: number;
+  status: JobStatus;
+  created_at: string | null;
+  completed_at: string | null;
+}
+
 // Predefined Qwen3-TTS CustomVoice speakers (from research F-01)
 export const PREDEFINED_SPEAKERS: Speaker[] = [
   {
