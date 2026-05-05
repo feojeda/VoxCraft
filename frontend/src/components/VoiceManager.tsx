@@ -51,8 +51,13 @@ export function VoiceManager({
       await apiClient.deleteVoice(voiceId);
       setDeletingId(null);
       onRefresh();
-    } catch {
-      // Error handled silently; user can retry
+    } catch (err: any) {
+      // If 404, the voice is already gone — refresh to clean up stale cache
+      if (err?.statusCode === 404) {
+        setDeletingId(null);
+        onRefresh();
+      }
+      // Otherwise, user can retry
     } finally {
       setIsDeleting(false);
     }

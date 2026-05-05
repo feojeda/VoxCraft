@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { ArrowLeft, Library, Upload, Mic } from "lucide-react";
+import { ArrowLeft, Library, Upload, Mic, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { VoiceUploader } from "@/components/VoiceUploader";
 import { VoiceRecorder } from "@/components/VoiceRecorder";
@@ -98,9 +98,19 @@ export default function VoicesPage() {
 
         {/* Voice list */}
         <section className="mt-10">
-          <h2 className="mb-4 text-lg font-semibold text-[var(--text-primary)]">
-            Your Voices
-          </h2>
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-[var(--text-primary)]">
+              Your Voices
+            </h2>
+            <button
+              onClick={loadVoices}
+              disabled={isLoading}
+              className="flex items-center gap-1 rounded-md border border-[var(--border)] px-3 py-1.5 text-sm text-[var(--text-secondary)] transition-colors hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)] disabled:opacity-50"
+            >
+              <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
+              Refresh
+            </button>
+          </div>
           {error && (
             <div className="mb-4 rounded-md bg-[var(--error)]/10 px-3 py-2 text-sm text-[var(--error)]">
               {error}
