@@ -17,6 +17,7 @@ export interface TTSRequest {
   ref_text?: string; // for voice-clone mode
   emotion_preset?: string; // happy, sad, angry, neutral, whisper
   pronunciation_enabled?: boolean; // default false
+  x_vector_only_mode?: boolean; // default false — cross-lingual timbre cloning
 }
 
 export interface PronunciationEntry {
@@ -44,6 +45,7 @@ export interface JobStatusResponse {
   speaker: string | null;
   speed: number;
   instructions: string | null;
+  x_vector_only_mode: boolean;
   created_at: string;
 }
 
@@ -64,6 +66,8 @@ export interface VoiceResponse {
   ref_text: string;
   duration_seconds: number;
   sample_rate: number;
+  voice_clone_prompt_b64?: string | null;
+  x_vector_only_mode: boolean;
   created_at: string;
 }
 

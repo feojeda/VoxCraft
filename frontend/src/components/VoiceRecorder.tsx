@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Mic, Square, Play, Trash2, Loader2 } from "lucide-react";
+import { Mic, Square, Play, Trash2, Loader2, Globe } from "lucide-react";
 import { apiClient } from "@/lib/api-client";
 import type { VoiceResponse } from "@/lib/types";
 
@@ -18,6 +18,7 @@ export function VoiceRecorder({ onRecordComplete }: VoiceRecorderProps) {
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [refText, setRefText] = useState("");
   const [name, setName] = useState("");
+  const [xVectorOnlyMode, setXVectorOnlyMode] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -101,10 +102,11 @@ export function VoiceRecorder({ onRecordComplete }: VoiceRecorderProps) {
       const file = new File([audioBlob], "recording.webm", {
         type: "audio/webm",
       });
-      const voice = await apiClient.uploadVoice(file, refText.trim(), name.trim());
+      const voice = await apiClient.uploadVoice(file, refText.trim(), name.trim(), xVectorOnlyMode);
       resetRecording();
       setRefText("");
       setName("");
+      setXVectorOnlyMode(false);
       onRecordComplete?.(voice);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Upload failed";
@@ -226,6 +228,29 @@ export function VoiceRecorder({ onRecordComplete }: VoiceRecorderProps) {
           rows={3}
           className="w-full rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)]/50 focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
         />
+      </div>
+
+      {/* x-vector only mode toggle */}
+      <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-3">
+        <label className="flex cursor-pointer items-start gap-3">
+          <input
+            type="checkbox"
+            checked={xVectorOnlyMode}
+            onChange={(e) => setXVectorOnlyMode(e.target.checked)}
+            className="mt-0.5 h-4 w-4 rounded border-[var(--border)] text-[var(--accent)] focus:ring-[var(--accent)]"
+          />
+          <div className="space-y-1">
+            <div className="flex items-center gap-1.5 text-sm font-medium text-[var(--text-primary)]">
+              <Globe className="h-4 w-4 text-[var(--accent)]" />
+              Native accent for other languages
+            </div>
+            <p className="text-xs text-[var(--text-secondary)]">
+              When enabled, the cloned voice will keep its timbre but use the native
+              prosody and accent of the target language. Recommended when generating
+              speech in a different language than the reference audio.
+            </p>
+          </div>
+        </label>
       </div>
 
       {/* Error */}

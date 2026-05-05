@@ -117,11 +117,14 @@ export const apiClient = {
   },
 
   /** POST /api/voices — Upload a cloned voice */
-  uploadVoice(audioFile: File, refText: string, name: string): Promise<VoiceResponse> {
+  uploadVoice(audioFile: File, refText: string, name: string, xVectorOnlyMode?: boolean): Promise<VoiceResponse> {
     const formData = new FormData();
     formData.append("audio", audioFile);
     formData.append("ref_text", refText);
     formData.append("name", name);
+    if (xVectorOnlyMode !== undefined) {
+      formData.append("x_vector_only_mode", String(xVectorOnlyMode));
+    }
     return request<VoiceResponse>("/voices", {
       method: "POST",
       body: formData,

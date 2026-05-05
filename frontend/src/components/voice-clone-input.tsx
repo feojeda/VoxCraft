@@ -1,22 +1,26 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Upload, FileAudio, Mic, Square, Trash2 } from "lucide-react";
+import { Upload, FileAudio, Mic, Square, Trash2, Globe } from "lucide-react";
 
 type SourceTab = "upload" | "record";
 
 interface VoiceCloneInputProps {
   refAudio: string | null;
   refText: string;
+  xVectorOnlyMode: boolean;
   onRefAudioChange: (base64: string | null) => void;
   onRefTextChange: (text: string) => void;
+  onXVectorOnlyModeChange: (value: boolean) => void;
 }
 
 export function VoiceCloneInput({
   refAudio,
   refText,
+  xVectorOnlyMode,
   onRefAudioChange,
   onRefTextChange,
+  onXVectorOnlyModeChange,
 }: VoiceCloneInputProps) {
   const [activeTab, setActiveTab] = useState<SourceTab>("upload");
   const [fileName, setFileName] = useState<string | null>(null);
@@ -302,6 +306,29 @@ export function VoiceCloneInput({
           className="w-full rounded-md border border-[var(--border)] bg-[var(--bg)] px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)]/50 focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
           rows={3}
         />
+      </div>
+
+      {/* x-vector only mode toggle */}
+      <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-3">
+        <label className="flex cursor-pointer items-start gap-3">
+          <input
+            type="checkbox"
+            checked={xVectorOnlyMode}
+            onChange={(e) => onXVectorOnlyModeChange(e.target.checked)}
+            className="mt-0.5 h-4 w-4 rounded border-[var(--border)] text-[var(--accent)] focus:ring-[var(--accent)]"
+          />
+          <div className="space-y-1">
+            <div className="flex items-center gap-1.5 text-sm font-medium text-[var(--text-primary)]">
+              <Globe className="h-4 w-4 text-[var(--accent)]" />
+              Native accent for other languages
+            </div>
+            <p className="text-xs text-[var(--text-secondary)]">
+              When enabled, the cloned voice will keep its timbre but use the native
+              prosody and accent of the target language. Recommended when generating
+              speech in a different language than the reference audio.
+            </p>
+          </div>
+        </label>
       </div>
     </div>
   );

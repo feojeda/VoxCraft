@@ -32,6 +32,7 @@ export default function Home() {
   const [instructions, setInstructions] = useState("");
   const [refAudio, setRefAudio] = useState<string | null>(null);
   const [refText, setRefText] = useState("");
+  const [xVectorOnlyMode, setXVectorOnlyMode] = useState(false);
   const [textError, setTextError] = useState<string | undefined>(undefined);
 
   // Phase 2 prosody state
@@ -64,6 +65,7 @@ export default function Home() {
     instruct,
     emotionPreset,
     pronunciationEnabled,
+    xVectorOnlyMode,
   });
 
   // Load cloned voices and pronunciation entries
@@ -294,8 +296,10 @@ export default function Home() {
                 <VoiceCloneInput
                   refAudio={refAudio}
                   refText={refText}
+                  xVectorOnlyMode={xVectorOnlyMode}
                   onRefAudioChange={setRefAudio}
                   onRefTextChange={setRefText}
+                  onXVectorOnlyModeChange={setXVectorOnlyMode}
                 />
               </div>
             )}
