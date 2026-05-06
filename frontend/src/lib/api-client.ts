@@ -50,6 +50,15 @@ async function request<T>(
   });
 
   if (!response.ok) {
+    if (
+      response.status === 401 &&
+      typeof window !== "undefined" &&
+      !endpoint.startsWith("/auth/")
+    ) {
+      window.location.href = "/login";
+      return new Promise(() => {});
+    }
+
     let detail = `Request failed with status ${response.status}`;
     let statusCode = response.status;
 

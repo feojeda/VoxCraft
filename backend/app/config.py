@@ -33,12 +33,19 @@ class Settings(BaseSettings):
     CELERY_BROKER_URL: str = "redis://localhost:6379/0"
     CELERY_RESULT_BACKEND: str = "redis://localhost:6379/1"
 
+    # Environment
+    ENVIRONMENT: str = "development"  # "development" or "production"
+
     # Auth
     SECRET_KEY: str = "change-me-in-production"
     ACCESS_TOKEN_EXPIRE_DAYS: int = 7
+    COOKIE_DOMAIN: str | None = None  # e.g. ".tarrito.rocks" for cross-subdomain cookies
+
+    # Proxy (Cloudflare)
+    BEHIND_PROXY: bool = False  # Trust X-Forwarded-* headers from Cloudflare
 
     # CORS
-    CORS_ORIGINS: list[str] = ["http://localhost:3000"]
+    CORS_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:3005"]
 
     # TTS Server (OpenAI-compatible HTTP API)
     TTS_SERVER_URL: str = "http://127.0.0.1:8000"

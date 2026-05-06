@@ -123,6 +123,7 @@ start_backend() {
             --host 0.0.0.0 \
             --port 8001 \
             --reload \
+            --proxy-headers \
             > "${LOG_DIR}/api.log" 2>&1 &
         echo $! > "${PID_DIR}/api.pid"
         cd "$ROOT_DIR"
