@@ -15,6 +15,8 @@ import type {
   ShareLink,
   ShareListResponse,
   SharePublicData,
+  CompareVoiceConfig,
+  CompareResponse,
 } from "./types";
 
 const API_BASE_URL =
@@ -48,6 +50,15 @@ async function request<T>(
   });
 
   if (!response.ok) {
+    if (
+      response.status === 401 &&
+      typeof window !== "undefined" &&
+      !endpoint.startsWith("/auth/")
+    ) {
+      window.location.href = "/login";
+      return new Promise(() => {});
+    }
+
     let detail = `Request failed with status ${response.status}`;
     let statusCode = response.status;
 
@@ -117,11 +128,14 @@ export const apiClient = {
   },
 
   /** POST /api/voices — Upload a cloned voice */
-  uploadVoice(audioFile: File, refText: string, name: string): Promise<VoiceResponse> {
+  uploadVoice(audioFile: File, refText: string, name: string, xVectorOnlyMode?: boolean): Promise<VoiceResponse> {
     const formData = new FormData();
     formData.append("audio", audioFile);
     formData.append("ref_text", refText);
     formData.append("name", name);
+    if (xVectorOnlyMode !== undefined) {
+      formData.append("x_vector_only_mode", String(xVectorOnlyMode));
+    }
     return request<VoiceResponse>("/voices", {
       method: "POST",
       body: formData,
@@ -266,6 +280,19 @@ export const apiClient = {
   /** GET /api/shares/public/{token} — Get public share data */
   getPublicShare(token: string): Promise<SharePublicData> {
     return request<SharePublicData>(`/shares/public/${token}`);
+  },
+
+  /** POST /api/compare — Create a voice comparison batch */
+  createCompare(text: string, voices: CompareVoiceConfig[], language?: string, speed?: number): Promise<CompareResponse> {
+    return request<CompareResponse>("/compare", {
+      method: "POST",
+      body: JSON.stringify({ text, voices, language: language || "auto", speed: speed || 1.0 }),
+    });
+  },
+
+  /** GET /api/compare/{batch_id} — Get comparison batch status */
+  getCompare(batchId: string): Promise<CompareResponse> {
+    return request<CompareResponse>(`/compare/${batchId}`);
   },
 };
 

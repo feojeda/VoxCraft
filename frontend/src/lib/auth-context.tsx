@@ -38,6 +38,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return userData;
     } catch {
       setUser(null);
+      try { await apiClient.logout(); } catch {}
       return null;
     }
   }, []);

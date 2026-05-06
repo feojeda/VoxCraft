@@ -26,6 +26,7 @@ interface UseTTSGenerationOptions {
   instruct: string;
   emotionPreset: string | null;
   pronunciationEnabled: boolean;
+  xVectorOnlyMode: boolean;
 }
 
 const POLL_INTERVAL = 2000; // 2 seconds
@@ -42,6 +43,7 @@ export function useTTSGeneration({
   instruct,
   emotionPreset,
   pronunciationEnabled,
+  xVectorOnlyMode,
 }: UseTTSGenerationOptions): UseTTSGenerationReturn {
   const queryClient = useQueryClient();
   const [jobId, setJobId] = useState<string | null>(null);
@@ -111,6 +113,7 @@ export function useTTSGeneration({
       instruct: instruct || undefined,
       emotion_preset: emotionPreset || undefined,
       pronunciation_enabled: pronunciationEnabled,
+      x_vector_only_mode: xVectorOnlyMode,
     };
 
     if (clonedVoiceId) {
@@ -125,7 +128,7 @@ export function useTTSGeneration({
     }
 
     return base;
-  }, [text, mode, speaker, clonedVoiceId, speed, instructions, refAudio, refText, instruct, emotionPreset, pronunciationEnabled]);
+  }, [text, mode, speaker, clonedVoiceId, speed, instructions, refAudio, refText, instruct, emotionPreset, pronunciationEnabled, xVectorOnlyMode]);
 
   // Create job mutation
   const createJobMutation = useMutation({
@@ -163,10 +166,6 @@ export function useTTSGeneration({
       setError("Please upload or record a reference audio");
       return;
     }
-    if (mode === "voice-clone" && !refText.trim()) {
-      setError("Please enter the reference transcript");
-      return;
-    }
 
     // Increment generation counter to invalidate stale polling
     generationRef.current += 1;
@@ -182,7 +181,7 @@ export function useTTSGeneration({
     queryClient.removeQueries({ queryKey: ["job-status"] });
 
     createJobMutation.mutate();
-  }, [text, mode, speaker, clonedVoiceId, instructions, refAudio, refText, createJobMutation, queryClient]);
+  }, [text, mode, speaker, clonedVoiceId, instructions, refAudio, refText, xVectorOnlyMode, createJobMutation, queryClient]);
 
   const isGenerating =
     status === "creating" || status === "polling";

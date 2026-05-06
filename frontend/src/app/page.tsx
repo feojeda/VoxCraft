@@ -32,6 +32,7 @@ export default function Home() {
   const [instructions, setInstructions] = useState("");
   const [refAudio, setRefAudio] = useState<string | null>(null);
   const [refText, setRefText] = useState("");
+  const [xVectorOnlyMode, setXVectorOnlyMode] = useState(false);
   const [textError, setTextError] = useState<string | undefined>(undefined);
 
   // Phase 2 prosody state
@@ -64,6 +65,7 @@ export default function Home() {
     instruct,
     emotionPreset,
     pronunciationEnabled,
+    xVectorOnlyMode,
   });
 
   // Load cloned voices and pronunciation entries
@@ -134,7 +136,6 @@ export default function Home() {
     if (mode === "speech" && !selectedSpeaker && !clonedVoiceId) return true;
     if (mode === "voice-design" && !instructions.trim()) return true;
     if (mode === "voice-clone" && !refAudio) return true;
-    if (mode === "voice-clone" && !refText.trim()) return true;
     return false;
   };
 
@@ -239,8 +240,15 @@ export default function Home() {
                                 : "border-[var(--border)] bg-[var(--background)] text-[var(--text-primary)] hover:border-[var(--text-secondary)] hover:bg-[var(--surface-hover)]"
                             }`}
                           >
-                            <span className="font-medium">{voice.name}</span>
-                            <span className="ml-1 text-xs text-[var(--text-secondary)]">
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-medium">{voice.name}</span>
+                              {voice.x_vector_only_mode && (
+                                <span className="inline-flex items-center rounded-full bg-[var(--accent)]/20 px-1.5 py-0 text-[10px] font-medium text-[var(--accent)]">
+                                  T
+                                </span>
+                              )}
+                            </div>
+                            <span className="block text-xs text-[var(--text-secondary)]">
                               {voice.duration_seconds.toFixed(0)}s
                             </span>
                           </button>
@@ -294,8 +302,10 @@ export default function Home() {
                 <VoiceCloneInput
                   refAudio={refAudio}
                   refText={refText}
+                  xVectorOnlyMode={xVectorOnlyMode}
                   onRefAudioChange={setRefAudio}
                   onRefTextChange={setRefText}
+                  onXVectorOnlyModeChange={setXVectorOnlyMode}
                 />
               </div>
             )}

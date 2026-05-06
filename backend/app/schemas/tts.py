@@ -33,6 +33,7 @@ class TTSRequest(BaseModel):
     ref_text: str | None = Field(default=None, description="Transcript of reference audio for voice-clone mode")
     emotion_preset: str | None = Field(default=None, description="Emotion preset: happy, sad, angry, neutral, whisper")
     pronunciation_enabled: bool = Field(default=False, description="Apply pronunciation dictionary overrides")
+    x_vector_only_mode: bool = Field(default=False, description="Copy only timbre, use native prosody of target language (voice-clone mode)")
 
 
 class TTSJobResponse(BaseModel):
@@ -63,6 +64,7 @@ class JobStatusResponse(BaseModel):
     instructions: str | None
     ref_audio: str | None
     ref_text: str | None
+    x_vector_only_mode: bool
     audio_wav_url: str | None
     audio_mp3_url: str | None
     error_message: str | None

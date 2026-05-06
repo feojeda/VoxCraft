@@ -51,8 +51,13 @@ export function VoiceManager({
       await apiClient.deleteVoice(voiceId);
       setDeletingId(null);
       onRefresh();
-    } catch {
-      // Error handled silently; user can retry
+    } catch (err: any) {
+      // If 404, the voice is already gone — refresh to clean up stale cache
+      if (err?.statusCode === 404) {
+        setDeletingId(null);
+        onRefresh();
+      }
+      // Otherwise, user can retry
     } finally {
       setIsDeleting(false);
     }
@@ -142,9 +147,20 @@ export function VoiceManager({
           </div>
 
           {/* Meta */}
-          <p className="mt-1 text-xs text-[var(--text-secondary)]">
-            {voice.duration_seconds.toFixed(1)}s &bull; {voice.sample_rate}Hz
-          </p>
+          <div className="mt-1 flex items-center gap-2">
+            <span className="text-xs text-[var(--text-secondary)]">
+              {voice.duration_seconds.toFixed(1)}s &bull; {voice.sample_rate}Hz
+            </span>
+            {voice.x_vector_only_mode ? (
+              <span className="inline-flex items-center rounded-full bg-[var(--accent)]/10 px-2 py-0.5 text-[10px] font-medium text-[var(--accent)]">
+                Timbre only
+              </span>
+            ) : (
+              <span className="inline-flex items-center rounded-full bg-[var(--surface-hover)] px-2 py-0.5 text-[10px] font-medium text-[var(--text-secondary)]">
+                Full voice
+              </span>
+            )}
+          </div>
 
           {/* Audio preview */}
           <div className="mt-3">

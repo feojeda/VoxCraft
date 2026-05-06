@@ -17,6 +17,7 @@ export interface TTSRequest {
   ref_text?: string; // for voice-clone mode
   emotion_preset?: string; // happy, sad, angry, neutral, whisper
   pronunciation_enabled?: boolean; // default false
+  x_vector_only_mode?: boolean; // default false — cross-lingual timbre cloning
 }
 
 export interface PronunciationEntry {
@@ -44,6 +45,7 @@ export interface JobStatusResponse {
   speaker: string | null;
   speed: number;
   instructions: string | null;
+  x_vector_only_mode: boolean;
   created_at: string;
 }
 
@@ -61,9 +63,11 @@ export interface VoiceResponse {
   id: string;
   name: string;
   audio_path: string;
-  ref_text: string;
+  ref_text: string | null;
   duration_seconds: number;
   sample_rate: number;
+  voice_clone_prompt_b64?: string | null;
+  x_vector_only_mode: boolean;
   created_at: string;
 }
 
@@ -173,6 +177,39 @@ export interface SharePublicData {
   audio_wav_url: string | null;
   audio_mp3_url: string | null;
   created_at: string;
+}
+
+// Compare / voice playground types
+export interface CompareVoiceConfig {
+  mode: TTSMode;
+  speaker?: string;
+  cloned_voice_id?: string;
+  instruct?: string;
+  emotion_preset?: string;
+  instructions?: string;
+}
+
+export interface CompareJobItem {
+  job_id: string;
+  voice_name: string;
+  status: JobStatus;
+  progress: number;
+  audio_wav_url: string | null;
+  audio_mp3_url: string | null;
+  error_message: string | null;
+  created_at: string | null;
+  completed_at: string | null;
+}
+
+export interface CompareResponse {
+  batch_id: string;
+  jobs: CompareJobItem[];
+  total: number;
+  completed_count: number;
+  failed_count: number;
+  status: JobStatus;
+  created_at: string | null;
+  completed_at: string | null;
 }
 
 // Predefined Qwen3-TTS CustomVoice speakers (from research F-01)

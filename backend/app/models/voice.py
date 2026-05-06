@@ -28,10 +28,11 @@ class ClonedVoice(Base):
     )
     name: Mapped[str] = mapped_column(String, nullable=False)
     audio_path: Mapped[str] = mapped_column(String, nullable=False)
-    ref_text: Mapped[str] = mapped_column(Text, nullable=False)
+    ref_text: Mapped[str | None] = mapped_column(Text, nullable=True)
     duration_seconds: Mapped[float] = mapped_column(Float, nullable=False)
     sample_rate: Mapped[int] = mapped_column(Integer, default=24000)
     voice_clone_prompt_b64: Mapped[str | None] = mapped_column(Text, nullable=True)
+    x_vector_only_mode: Mapped[bool] = mapped_column(default=False)
     user_id: Mapped[str | None] = mapped_column(String, nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(default=func.now())

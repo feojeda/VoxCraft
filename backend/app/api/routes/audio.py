@@ -10,10 +10,13 @@ from pathlib import Path
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import FileResponse
 
-from app.api.deps import get_current_user
+from app.api.deps import get_current_user, get_db
 from app.models.user import User
+from app.models.voice import ClonedVoice
 from app.services.job_manager import job_manager
 from app.services.share_service import share_service
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 
 logger = logging.getLogger(__name__)
 
@@ -119,4 +122,39 @@ async def serve_shared_mp3(token: str) -> FileResponse:
         path=str(mp3_path),
         media_type="audio/mpeg",
         filename=f"{share.token}.mp3",
+    )
+
+
+@router.get("/audio/voices/{voice_id}")
+async def serve_cloned_voice_audio(
+    voice_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> FileResponse:
+    """Serve the reference audio file for a cloned voice.
+
+    Returns 404 if the voice doesn't exist, isn't owned by the user,
+    or the file is missing from disk.
+    """
+    from sqlalchemy import select
+
+    result = await db.execute(
+        select(ClonedVoice).where(ClonedVoice.id == voice_id)
+    )
+    voice = result.scalar_one_or_none()
+
+    if voice is None or voice.user_id != current_user.id:
+        raise HTTPException(status_code=404, detail=f"Voice '{voice_id}' not found")
+
+    if not voice.audio_path:
+        raise HTTPException(status_code=404, detail="Audio file path not available")
+
+    audio_path = Path(voice.audio_path)
+    if not audio_path.exists():
+        raise HTTPException(status_code=404, detail="Audio file not found on disk")
+
+    return FileResponse(
+        path=str(audio_path),
+        media_type="audio/wav",
+        filename=f"{voice_id}.wav",
     )

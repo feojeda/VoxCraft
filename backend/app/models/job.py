@@ -35,6 +35,7 @@ class Job(Base):
     instructions: Mapped[str | None] = mapped_column(Text, nullable=True)
     ref_audio: Mapped[str | None] = mapped_column(Text, nullable=True)
     ref_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    x_vector_only_mode: Mapped[bool] = mapped_column(default=False)
 
     # Ownership and display
     user_id: Mapped[str | None] = mapped_column(String, nullable=True)

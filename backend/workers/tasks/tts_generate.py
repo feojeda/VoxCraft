@@ -117,6 +117,7 @@ def generate_speech(
     ref_text: str | None,
     emotion_preset: str | None = None,
     pronunciation_enabled: bool = False,
+    x_vector_only_mode: bool = False,
 ) -> None:
     """Celery task: synthesize speech for a TTS job.
 
@@ -139,6 +140,7 @@ def generate_speech(
         ref_text: Transcript of reference audio.
         emotion_preset: Emotion preset for prosody control.
         pronunciation_enabled: Whether to apply pronunciation dictionary.
+        x_vector_only_mode: Copy only timbre for cross-lingual voice clone.
     """
     # Import here to avoid circular imports at module level
     from app.services.audio_service import audio_service
@@ -207,6 +209,7 @@ def generate_speech(
                 ref_audio=ref_audio,
                 ref_text=ref_text,
                 language=language,
+                x_vector_only_mode=x_vector_only_mode,
             )
         else:
             raise ValueError(f"Unknown mode: {mode}")
